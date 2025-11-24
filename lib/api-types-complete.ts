@@ -64,6 +64,7 @@ export interface BaseTask {
   created_at: string;
   updated_at?: string;
   user_id: string;
+  tags?: Tag[]; // Tags associadas à tarefa
 }
 
 export interface Habit extends BaseTask {
@@ -93,13 +94,15 @@ export interface CreateHabitRequest {
   frequency_type: FrequencyType;
   frequency_target_times?: number; // Obrigatório se WEEKLY_TIMES
   frequency_days?: number[]; // Obrigatório se SPECIFIC_DAYS
+  tag_ids?: string[]; // IDs das tags a serem associadas
 }
 
 export interface CreateTodoRequest {
   title: string;
   description?: string;
-  difficulty: TaskDifficulty;
+  difficulty?: TaskDifficulty;
   deadline?: string; // ISO Format
+  tag_ids?: string[]; // IDs das tags a serem associadas
 }
 
 export interface UpdateHabitRequest extends Partial<CreateHabitRequest> {}
@@ -133,14 +136,19 @@ export interface CompleteTaskResponse {
 export interface Tag {
   id: string;
   name: string;
-  color: string; // Hexadecimal (ex: #FF0000)
+  color?: string; // Hexadecimal (ex: #FF0000)
   user_id: string;
-  created_at: string;
+  created_at?: string;
 }
 
 export interface CreateTagRequest {
   name: string;
-  color: string;
+  color?: string;
+}
+
+export interface UpdateTagRequest {
+  name?: string;
+  color?: string;
 }
 
 export interface AssociateTagRequest {

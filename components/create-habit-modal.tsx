@@ -10,11 +10,15 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent } from "@/components/ui/card"
+import { TagSelector } from "@/components/tag-selector"
 import { Plus, X, Star, Repeat, CheckSquare } from "lucide-react"
+import type { Tag } from "@/lib/api-types-complete"
 
 interface CreateHabitModalProps {
   onCreateHabit: (habit: any) => void
   children: React.ReactNode
+  availableTags?: Tag[]
+  onManageTags?: () => void
 }
 
 const difficultyOptions = [
@@ -36,7 +40,7 @@ const frequencyOptions = [
 
 const predefinedTags = ["saúde", "educação", "trabalho", "fitness", "mental", "social", "criatividade", "finanças"]
 
-export function CreateHabitModal({ onCreateHabit, children }: CreateHabitModalProps) {
+export function CreateHabitModal({ onCreateHabit, children, availableTags = [], onManageTags }: CreateHabitModalProps) {
   const [open, setOpen] = useState(false)
   const [formData, setFormData] = useState({
     title: "",
@@ -47,7 +51,7 @@ export function CreateHabitModal({ onCreateHabit, children }: CreateHabitModalPr
     frequency_target_times: 3,
     frequency_days: [] as number[],
     deadline: "",
-    tags: [] as string[],
+    tags: [] as string[], // IDs das tags selecionadas
     newTag: "",
   })
 
@@ -83,7 +87,7 @@ export function CreateHabitModal({ onCreateHabit, children }: CreateHabitModalPr
       xp: selectedDifficulty?.xp || 25,
       completed: false,
       streak: 0,
-      tags: formData.tags,
+      tag_ids: formData.tags, // IDs das tags selecionadas
       frequency: formData.type === "habit" ? formData.frequency : undefined,
       frequency_target_times: formData.type === "habit" && formData.frequency === "WEEKLY_TIMES" ? formData.frequency_target_times : undefined,
       frequency_days: formData.type === "habit" && formData.frequency === "SPECIFIC_DAYS" ? formData.frequency_days : undefined,
@@ -330,65 +334,13 @@ export function CreateHabitModal({ onCreateHabit, children }: CreateHabitModalPr
           </div>
 
           {/* Tags */}
-          <div>
-            <Label>Tags</Label>
-            <div className="space-y-3 mt-2">
-              {/* Current Tags */}
-              {formData.tags.length > 0 && (
-                <div className="flex flex-wrap gap-2">
-                  {formData.tags.map((tag) => (
-                    <Badge key={tag} variant="secondary" className="glass">
-                      {tag}
-                      <button type="button" onClick={() => removeTag(tag)} className="ml-2 hover:text-destructive">
-                        <X className="w-3 h-3" />
-                      </button>
-                    </Badge>
-                  ))}
-                </div>
-              )}
-
-              {/* Add Custom Tag */}
-              <div className="flex gap-2">
-                <Input
-                  value={formData.newTag}
-                  onChange={(e) => setFormData((prev) => ({ ...prev, newTag: e.target.value }))}
-                  placeholder="Nova tag..."
-                  className="glass bg-transparent"
-                  onKeyPress={(e) => {
-                    if (e.key === "Enter") {
-                      e.preventDefault()
-                      addTag(formData.newTag)
-                    }
-                  }}
-                />
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => addTag(formData.newTag)}
-                  className="glass bg-transparent"
-                >
-                  <Plus className="w-4 h-4" />
-                </Button>
-              </div>
-
-              {/* Predefined Tags */}
-              <div className="flex flex-wrap gap-2">
-                {predefinedTags
-                  .filter((tag) => !formData.tags.includes(tag))
-                  .map((tag) => (
-                    <Badge
-                      key={tag}
-                      variant="outline"
-                      className="cursor-pointer hover:bg-primary hover:text-primary-foreground transition-colors"
-                      onClick={() => addTag(tag)}
-                    >
-                      {tag}
-                    </Badge>
-                  ))}
-              </div>
-            </div>
-          </div>
+          <TagSelector
+            availableTags={availableTags}
+            selectedTagIds={formData.tags}
+            onTagSelect={(tagId) => setFormData(prev => ({ ...prev, tags: [...prev.tags, tagId] }))}
+            onTagRemove={(tagId) => setFormData(prev => ({ ...prev, tags: prev.tags.filter(id => id !== tagId) }))}
+            onManageTags={onManageTags}
+          />
 
           {/* Preview */}
           <Card className="glass bg-primary/5">

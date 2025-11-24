@@ -3,6 +3,7 @@
 import { useEffect, useState, useMemo } from "react"
 import { useAuth } from "@/hooks/use-auth"
 import { useTasks } from "@/hooks/use-tasks"
+import { useTags } from "@/hooks/use-tags"
 import { useGamificationFeedback } from "@/hooks/use-gamification-feedback"
 import { ProtectedRoute } from "@/components/protected-route"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -12,6 +13,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { CreateHabitModal } from "@/components/create-habit-modal"
 import { EditTaskModal } from "@/components/edit-task-modal"
+import { TagManagerModal } from "@/components/tag-manager-modal"
 import { HabitFilters, type FilterState } from "@/components/habit-filters"
 import { ThemeToggle } from "@/components/theme-toggle"
 import { MobileNav } from "@/components/mobile-nav"
@@ -108,6 +110,7 @@ const generateCalendarDays = () => {
 function DashboardContent() {
   const { user, logout } = useAuth()
   const { tasks, isLoading, fetchTasks, createHabit, createTodo, updateHabit, updateTodo, deleteTask, completeTask, uncompleteTask } = useTasks()
+  const { tags, fetchTags, createTag, updateTag, deleteTag } = useTags()
   const { handleTaskComplete } = useGamificationFeedback()
   
   // Estados locais para animações
@@ -131,12 +134,14 @@ function DashboardContent() {
   const [profileOpen, setProfileOpen] = useState(false)
   const [editingTask, setEditingTask] = useState<Task | null>(null)
   const [editModalOpen, setEditModalOpen] = useState(false)
+  const [tagManagerOpen, setTagManagerOpen] = useState(false)
   const [calendarDays] = useState(generateCalendarDays())
   const [currentMonth] = useState(new Date().toLocaleDateString("pt-BR", { month: "long", year: "numeric" }))
 
   useEffect(() => {
     fetchTasks()
-  }, [fetchTasks])
+    fetchTags()
+  }, [fetchTasks, fetchTags])
 
   const handleCompleteTask = async (id: string) => {
     if (!user) return
@@ -176,6 +181,7 @@ function DashboardContent() {
         description: data.description || "",
         difficulty: data.difficulty?.toUpperCase() || "EASY",
         deadline: data.deadline || undefined,
+        tag_ids: data.tag_ids || [],
       }
       
       console.log("📤 [Dashboard] Criando afazer:", todoData)
@@ -189,6 +195,7 @@ function DashboardContent() {
         frequency_type: data.frequency || FrequencyType.DAILY,
         frequency_target_times: data.frequency_target_times,
         frequency_days: data.frequency_days,
+        tag_ids: data.tag_ids || [],
       }
       
       console.log("📤 [Dashboard] Criando hábito:", habitData)
@@ -231,6 +238,15 @@ function DashboardContent() {
 
       if (filters.difficulties.length > 0 && !filters.difficulties.includes(task.difficulty)) {
         return false
+      }
+
+      // Filtro por tags
+      if (filters.selectedTags.length > 0) {
+        const taskTagNames = task.tags?.map(t => t.name) || []
+        const hasMatchingTag = filters.selectedTags.some(filterTag => 
+          taskTagNames.includes(filterTag)
+        )
+        if (!hasMatchingTag) return false
       }
 
       if (filters.completionStatus === "completed") {
@@ -303,10 +319,17 @@ function DashboardContent() {
   }
 
   const availableTags = useMemo(() => {
-    const tags = new Set<string>()
-    // Tags virão do backend posteriormente
-    return Array.from(tags).sort()
-  }, [tasks])
+    // Coletar todas as tags únicas das tarefas
+    const taskTags = new Set<string>()
+    tasks.forEach(task => {
+      task.tags?.forEach(tag => taskTags.add(tag.name))
+    })
+    
+    // Adicionar tags criadas pelo usuário
+    tags.forEach(tag => taskTags.add(tag.name))
+    
+    return Array.from(taskTags).sort()
+  }, [tasks, tags])
 
   const completedTodayCount = tasks.filter(t => {
     if (t.task_type === "todo") return t.completed
@@ -344,6 +367,22 @@ function DashboardContent() {
           setEditingTask(null)
         }}
         onUpdate={handleUpdateTask}
+      />
+
+      {/* Modal de Gerenciamento de Tags */}
+      <TagManagerModal
+        open={tagManagerOpen}
+        onClose={() => setTagManagerOpen(false)}
+        tags={tags}
+        onCreateTag={async (name, color) => {
+          await createTag({ name, color })
+        }}
+        onUpdateTag={async (tagId, name, color) => {
+          await updateTag(tagId, { name, color })
+        }}
+        onDeleteTag={async (tagId) => {
+          await deleteTag(tagId)
+        }}
       />
 
       <header className="glass-strong border-b border-border sticky top-0 z-50">
@@ -456,7 +495,11 @@ function DashboardContent() {
               <CardHeader className="pb-4">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                   <CardTitle className="text-xl">Suas Missões</CardTitle>
-                  <CreateHabitModal onCreateHabit={handleCreateTask}>
+                  <CreateHabitModal 
+                    onCreateHabit={handleCreateTask}
+                    availableTags={tags}
+                    onManageTags={() => setTagManagerOpen(true)}
+                  >
                     <Button size="sm" className="bg-primary hover:bg-primary/90 w-full sm:w-auto">
                       <Plus className="w-4 h-4 mr-2" />
                       Nova Tarefa
@@ -523,6 +566,25 @@ function DashboardContent() {
                                 </div>
                                 {task.description && (
                                   <p className="text-sm text-muted-foreground">{task.description}</p>
+                                )}
+                                
+                                {/* Tags */}
+                                {task.tags && task.tags.length > 0 && (
+                                  <div className="flex flex-wrap gap-1 mt-2">
+                                    {task.tags.map((tag) => (
+                                      <Badge
+                                        key={tag.id}
+                                        variant="outline"
+                                        className="text-[10px] px-1.5 py-0"
+                                        style={{
+                                          borderColor: tag.color || undefined,
+                                          color: tag.color || undefined,
+                                        }}
+                                      >
+                                        {tag.name}
+                                      </Badge>
+                                    ))}
+                                  </div>
                                 )}
                                 
                                 {/* Frequência do hábito */}
@@ -676,6 +738,26 @@ function DashboardContent() {
                                 {task.description && (
                                   <p className="text-sm text-muted-foreground">{task.description}</p>
                                 )}
+                                
+                                {/* Tags */}
+                                {task.tags && task.tags.length > 0 && (
+                                  <div className="flex flex-wrap gap-1 mt-2">
+                                    {task.tags.map((tag) => (
+                                      <Badge
+                                        key={tag.id}
+                                        variant="outline"
+                                        className="text-[10px] px-1.5 py-0"
+                                        style={{
+                                          borderColor: tag.color || undefined,
+                                          color: tag.color || undefined,
+                                        }}
+                                      >
+                                        {tag.name}
+                                      </Badge>
+                                    ))}
+                                  </div>
+                                )}
+                                
                                 {(task as any).deadline && (
                                   <div className="text-xs text-blue-400 mt-1">
                                     Prazo: {new Date((task as any).deadline).toLocaleDateString("pt-BR")}

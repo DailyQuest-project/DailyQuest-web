@@ -1,0 +1,358 @@
+"use client"
+
+import type React from "react"
+
+import { useState } from "react"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Textarea } from "@/components/ui/textarea"
+import { Badge } from "@/components/ui/badge"
+import { Card, CardContent } from "@/components/ui/card"
+import { Plus, X, Star, Repeat, CheckSquare } from "lucide-react"
+
+interface CreateHabitModalProps {
+  onCreateHabit: (habit: any) => void
+  children: React.ReactNode
+}
+
+const difficultyOptions = [
+  { value: "easy", label: "Fácil", xp: 15, color: "bg-green-600", description: "Tarefas simples e rápidas" },
+  { value: "medium", label: "Médio", xp: 25, color: "bg-yellow-600", description: "Requer esforço moderado" },
+  { value: "hard", label: "Difícil", xp: 40, color: "bg-red-600", description: "Desafios significativos" },
+]
+
+const habitTypes = [
+  { value: "habit", label: "Hábito", icon: Repeat, description: "Ações recorrentes sem prazo fixo" },
+  { value: "todo", label: "Afazer", icon: CheckSquare, description: "Tarefas únicas com deadline" },
+]
+
+const frequencyOptions = [
+  { value: "daily", label: "Diariamente", description: "Todos os dias" },
+  { value: "weekly", label: "Semanalmente", description: "1 vez por semana" },
+  { value: "3x-week", label: "3x por semana", description: "3 vezes na semana" },
+  { value: "flexible", label: "Flexível", description: "Sem frequência fixa" },
+]
+
+const predefinedTags = ["saúde", "educação", "trabalho", "fitness", "mental", "social", "criatividade", "finanças"]
+
+export function CreateHabitModal({ onCreateHabit, children }: CreateHabitModalProps) {
+  const [open, setOpen] = useState(false)
+  const [formData, setFormData] = useState({
+    title: "",
+    description: "",
+    difficulty: "medium",
+    type: "habit",
+    frequency: "daily",
+    deadline: "",
+    tags: [] as string[],
+    newTag: "",
+  })
+
+  const selectedDifficulty = difficultyOptions.find((d) => d.value === formData.difficulty)
+  const selectedType = habitTypes.find((t) => t.value === formData.type)
+  const selectedFrequency = frequencyOptions.find((f) => f.value === formData.frequency)
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!formData.title.trim()) return
+
+    if (formData.type === "todo" && !formData.deadline) {
+      alert("Por favor, selecione um deadline para o afazer.")
+      return
+    }
+
+    const newHabit = {
+      id: Date.now(),
+      title: formData.title,
+      description: formData.description,
+      difficulty: formData.difficulty,
+      type: formData.type,
+      xp: selectedDifficulty?.xp || 25,
+      completed: false,
+      streak: 0,
+      tags: formData.tags,
+      frequency: formData.type === "habit" ? formData.frequency : undefined,
+      deadline: formData.type === "todo" ? formData.deadline : undefined,
+      weeklyProgress: formData.type === "habit" ? 0 : undefined,
+      weeklyTarget: formData.type === "habit" ? getWeeklyTarget(formData.frequency) : undefined,
+    }
+
+    onCreateHabit(newHabit)
+    setFormData({
+      title: "",
+      description: "",
+      difficulty: "medium",
+      type: "habit",
+      frequency: "daily",
+      deadline: "",
+      tags: [],
+      newTag: "",
+    })
+    setOpen(false)
+  }
+
+  const getWeeklyTarget = (frequency: string) => {
+    switch (frequency) {
+      case "daily":
+        return 7
+      case "weekly":
+        return 1
+      case "3x-week":
+        return 3
+      case "flexible":
+        return 0
+      default:
+        return 0
+    }
+  }
+
+  const addTag = (tag: string) => {
+    if (tag && !formData.tags.includes(tag)) {
+      setFormData((prev) => ({ ...prev, tags: [...prev.tags, tag], newTag: "" }))
+    }
+  }
+
+  const removeTag = (tagToRemove: string) => {
+    setFormData((prev) => ({
+      ...prev,
+      tags: prev.tags.filter((tag) => tag !== tagToRemove),
+    }))
+  }
+
+  const today = new Date().toISOString().split("T")[0]
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>{children}</DialogTrigger>
+      <DialogContent className="glass-strong max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle className="text-xl font-bold">Criar Novo Hábito</DialogTitle>
+        </DialogHeader>
+
+        <form onSubmit={handleSubmit} className="space-y-6">
+          {/* Basic Info */}
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="title">Título *</Label>
+              <Input
+                id="title"
+                value={formData.title}
+                onChange={(e) => setFormData((prev) => ({ ...prev, title: e.target.value }))}
+                placeholder="Ex: Meditar 10 minutos"
+                className="glass bg-transparent"
+                required
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="description">Descrição</Label>
+              <Textarea
+                id="description"
+                value={formData.description}
+                onChange={(e) => setFormData((prev) => ({ ...prev, description: e.target.value }))}
+                placeholder="Descreva seu hábito..."
+                className="glass bg-transparent resize-none"
+                rows={3}
+              />
+            </div>
+          </div>
+
+          {/* Type Selection */}
+          <div>
+            <Label>Tipo de Atividade</Label>
+            <div className="grid grid-cols-2 gap-3 mt-2">
+              {habitTypes.map((type) => {
+                const Icon = type.icon
+                return (
+                  <Card
+                    key={type.value}
+                    className={`cursor-pointer transition-all hover:scale-105 ${
+                      formData.type === type.value ? "ring-2 ring-primary bg-primary/10" : "glass hover:bg-card/90"
+                    }`}
+                    onClick={() => setFormData((prev) => ({ ...prev, type: type.value }))}
+                  >
+                    <CardContent className="p-4 text-center">
+                      <Icon className="w-6 h-6 mx-auto mb-2 text-primary" />
+                      <div className="font-medium text-sm">{type.label}</div>
+                      <div className="text-xs text-muted-foreground mt-1">{type.description}</div>
+                    </CardContent>
+                  </Card>
+                )
+              })}
+            </div>
+          </div>
+
+          {formData.type === "habit" && (
+            <div>
+              <Label>Frequência Desejada</Label>
+              <div className="grid grid-cols-2 gap-3 mt-2">
+                {frequencyOptions.map((frequency) => (
+                  <Card
+                    key={frequency.value}
+                    className={`cursor-pointer transition-all hover:scale-105 ${
+                      formData.frequency === frequency.value
+                        ? "ring-2 ring-primary bg-primary/10"
+                        : "glass hover:bg-card/90"
+                    }`}
+                    onClick={() => setFormData((prev) => ({ ...prev, frequency: frequency.value }))}
+                  >
+                    <CardContent className="p-3 text-center">
+                      <div className="font-medium text-sm">{frequency.label}</div>
+                      <div className="text-xs text-muted-foreground mt-1">{frequency.description}</div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {formData.type === "todo" && (
+            <div>
+              <Label htmlFor="deadline">Deadline *</Label>
+              <Input
+                id="deadline"
+                type="date"
+                value={formData.deadline}
+                min={today}
+                onChange={(e) => setFormData((prev) => ({ ...prev, deadline: e.target.value }))}
+                className="glass bg-transparent"
+                required
+              />
+            </div>
+          )}
+
+          {/* Difficulty Selection */}
+          <div>
+            <Label>Dificuldade</Label>
+            <div className="grid grid-cols-3 gap-3 mt-2">
+              {difficultyOptions.map((difficulty) => (
+                <Card
+                  key={difficulty.value}
+                  className={`cursor-pointer transition-all hover:scale-105 ${
+                    formData.difficulty === difficulty.value
+                      ? "ring-2 ring-primary bg-primary/10"
+                      : "glass hover:bg-card/90"
+                  }`}
+                  onClick={() => setFormData((prev) => ({ ...prev, difficulty: difficulty.value }))}
+                >
+                  <CardContent className="p-4 text-center">
+                    <div className={`w-4 h-4 rounded-full ${difficulty.color} mx-auto mb-2`} />
+                    <div className="font-medium text-sm">{difficulty.label}</div>
+                    <div className="text-xs text-muted-foreground">{difficulty.description}</div>
+                    <div className="flex items-center justify-center gap-1 mt-2 text-primary">
+                      <Star className="w-3 h-3" />
+                      <span className="text-xs font-medium">+{difficulty.xp} XP</span>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </div>
+
+          {/* Tags */}
+          <div>
+            <Label>Tags</Label>
+            <div className="space-y-3 mt-2">
+              {/* Current Tags */}
+              {formData.tags.length > 0 && (
+                <div className="flex flex-wrap gap-2">
+                  {formData.tags.map((tag) => (
+                    <Badge key={tag} variant="secondary" className="glass">
+                      {tag}
+                      <button type="button" onClick={() => removeTag(tag)} className="ml-2 hover:text-destructive">
+                        <X className="w-3 h-3" />
+                      </button>
+                    </Badge>
+                  ))}
+                </div>
+              )}
+
+              {/* Add Custom Tag */}
+              <div className="flex gap-2">
+                <Input
+                  value={formData.newTag}
+                  onChange={(e) => setFormData((prev) => ({ ...prev, newTag: e.target.value }))}
+                  placeholder="Nova tag..."
+                  className="glass bg-transparent"
+                  onKeyPress={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault()
+                      addTag(formData.newTag)
+                    }
+                  }}
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => addTag(formData.newTag)}
+                  className="glass bg-transparent"
+                >
+                  <Plus className="w-4 h-4" />
+                </Button>
+              </div>
+
+              {/* Predefined Tags */}
+              <div className="flex flex-wrap gap-2">
+                {predefinedTags
+                  .filter((tag) => !formData.tags.includes(tag))
+                  .map((tag) => (
+                    <Badge
+                      key={tag}
+                      variant="outline"
+                      className="cursor-pointer hover:bg-primary hover:text-primary-foreground transition-colors"
+                      onClick={() => addTag(tag)}
+                    >
+                      {tag}
+                    </Badge>
+                  ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Preview */}
+          <Card className="glass bg-primary/5">
+            <CardContent className="p-4">
+              <div className="text-sm font-medium text-muted-foreground mb-2">Preview da Recompensa</div>
+              <div className="flex items-center justify-between">
+                <div>
+                  <div className="font-medium">{formData.title || "Seu hábito"}</div>
+                  <div className="text-sm text-muted-foreground">
+                    {selectedType?.label} • {selectedDifficulty?.label}
+                    {formData.type === "habit" && selectedFrequency && ` • ${selectedFrequency.label}`}
+                    {formData.type === "todo" &&
+                      formData.deadline &&
+                      ` • ${new Date(formData.deadline).toLocaleDateString("pt-BR")}`}
+                  </div>
+                </div>
+                <div className="flex items-center gap-1 text-primary font-medium">
+                  <Star className="w-4 h-4" />+{selectedDifficulty?.xp} XP
+                  {formData.type === "habit" && formData.frequency !== "flexible" && (
+                    <span className="text-xs text-green-500 ml-2">+5 XP bônus</span>
+                  )}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Actions */}
+          <div className="flex gap-3 pt-4">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setOpen(false)}
+              className="flex-1 glass bg-transparent"
+            >
+              Cancelar
+            </Button>
+            <Button type="submit" className="flex-1 bg-gradient-to-r from-primary to-accent">
+              Criar {formData.type === "habit" ? "Hábito" : "Afazer"}
+            </Button>
+          </div>
+        </form>
+      </DialogContent>
+    </Dialog>
+  )
+}

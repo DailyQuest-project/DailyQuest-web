@@ -1,0 +1,208 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+:root {
+  /* Updated color tokens for Daily Quest dark theme */
+  --background: #fafbfc;
+  --foreground: #24292e;
+  --card: #ffffff;
+  --card-foreground: #24292e;
+  --popover: #ffffff;
+  --popover-foreground: #24292e;
+  --primary: #2dba4e;
+  --primary-foreground: #ffffff;
+  --secondary: #f6f8fa;
+  --secondary-foreground: #24292e;
+  --muted: #f6f8fa;
+  --muted-foreground: #586069;
+  --accent: #0366d6;
+  --accent-foreground: #ffffff;
+  --destructive: #d73a49;
+  --destructive-foreground: #ffffff;
+  --border: #e1e4e8;
+  --input: #ffffff;
+  --ring: #2dba4e;
+  --chart-1: #2dba4e;
+  --chart-2: #0366d6;
+  --chart-3: #f66a0a;
+  --chart-4: #6f42c1;
+  --chart-5: #d73a49;
+  --success: #2dba4e;
+  --warning: #f66a0a;
+  --danger: #d73a49;
+  --radius: 0.5rem;
+  --sidebar: oklch(1 0 0 / 0.2);
+  --sidebar-foreground: oklch(0.25 0.08 270);
+  --sidebar-primary: oklch(0.45 0.15 270);
+  --sidebar-primary-foreground: oklch(0.98 0 0);
+  --sidebar-accent: oklch(0.65 0.2 220);
+  --sidebar-accent-foreground: oklch(0.98 0 0);
+  --sidebar-border: oklch(1 0 0 / 0.1);
+  --sidebar-ring: oklch(0.65 0.2 220 / 0.5);
+}
+
+.dark {
+  /* Daily Quest specific dark mode colors matching the screenshot */
+  --background: #24292e;
+  --foreground: #fafbfc;
+  --card: #2b3137;
+  --card-foreground: #fafbfc;
+  --popover: #2b3137;
+  --popover-foreground: #fafbfc;
+  --primary: #2dba4e;
+  --primary-foreground: #ffffff;
+  --secondary: #32383f;
+  --secondary-foreground: #fafbfc;
+  --muted: #32383f;
+  --muted-foreground: #8b949e;
+  --accent: #0366d6;
+  --accent-foreground: #ffffff;
+  --destructive: #f85149;
+  --destructive-foreground: #ffffff;
+  --border: #32383f;
+  --input: #32383f;
+  --ring: #2dba4e;
+  --chart-1: #2dba4e;
+  --chart-2: #0366d6;
+  --chart-3: #f66a0a;
+  --chart-4: #6f42c1;
+  --chart-5: #f85149;
+  --success: #2dba4e;
+  --warning: #f66a0a;
+  --danger: #f85149;
+  --sidebar: oklch(1 0 0 / 0.2);
+  --sidebar-foreground: oklch(0.25 0.08 270);
+  --sidebar-primary: oklch(0.45 0.15 270);
+  --sidebar-primary-foreground: oklch(0.98 0 0);
+  --sidebar-accent: oklch(0.65 0.2 220);
+  --sidebar-accent-foreground: oklch(0.98 0 0);
+  --sidebar-border: oklch(1 0 0 / 0.1);
+  --sidebar-ring: oklch(0.65 0.2 220 / 0.5);
+}
+
+@theme inline {
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  /* Added custom color tokens for gamification */
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-danger: var(--danger);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground transition-colors;
+    /* Updated background for Daily Quest theme */
+    background: var(--background);
+    min-height: 100vh;
+  }
+
+  /* Enhanced gradient backgrounds for both themes */
+  .dark body {
+    background: linear-gradient(135deg, oklch(0.08 0.02 270) 0%, oklch(0.05 0.01 280) 100%);
+  }
+
+  /* Updated glassmorphism for Daily Quest aesthetic */
+  .glass {
+    @apply backdrop-blur-sm bg-card border border-border transition-all;
+  }
+
+  .glass-strong {
+    @apply backdrop-blur-md bg-card border border-border transition-all;
+  }
+
+  /* Enhanced dark mode glass effects for Daily Quest */
+  .dark .glass {
+    @apply bg-card/95 border-border;
+  }
+
+  .dark .glass-strong {
+    @apply bg-card border-border;
+  }
+
+  /* Responsive utilities */
+  @media (max-width: 768px) {
+    .container {
+      @apply px-4;
+    }
+  }
+
+  /* Enhanced scrollbar styling */
+  ::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  ::-webkit-scrollbar-track {
+    @apply bg-muted/20;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply bg-muted-foreground/30 rounded-full;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-muted-foreground/50;
+  }
+
+  /* Animation improvements */
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .animate-fade-in {
+    animation: fadeIn 0.3s ease-out;
+  }
+
+  /* Focus improvements for accessibility */
+  .focus-visible {
+    @apply outline-2 outline-offset-2 outline-ring;
+  }
+}

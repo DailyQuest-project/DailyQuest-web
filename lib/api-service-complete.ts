@@ -104,24 +104,13 @@ export const taskService = {
    * Response: Array de objetos com task_type: "habit" ou "todo"
    */
   async getTasks(): Promise<Task[]> {
-    const response = await apiClient.get<any[]>('/tasks/');
+    const response = await apiClient.get<Task[]>('/tasks/');
     
     if (response.error || !response.data) {
       throw new Error(response.error || 'Failed to get tasks');
     }
     
-    // 🔧 WORKAROUND: Backend retorna 'last_completed' mas frontend espera 'last_completed_at'
-    const tasks = response.data.map((task: any) => {
-      if (task.task_type === 'habit' && task.last_completed) {
-        return {
-          ...task,
-          last_completed_at: task.last_completed,
-        };
-      }
-      return task;
-    });
-    
-    return tasks as Task[];
+    return response.data;
   },
 
   /**
@@ -219,10 +208,11 @@ export const taskService = {
   },
 
   /**
-   * Desfazer conclusão (se necessário)
+   * Desconcluir Tarefa - DELETE http://localhost:8000/api/v1/tasks/{id}/complete
+   * Remove a conclusão de hoje
    */
-  async uncompleteTask(id: string): Promise<Task> {
-    const response = await apiClient.post<Task>(`/tasks/${id}/uncomplete`);
+  async uncompleteTask(id: string): Promise<{ message: string; xp_removed: number }> {
+    const response = await apiClient.delete<{ message: string; xp_removed: number }>(`/tasks/${id}/complete`);
     
     if (response.error || !response.data) {
       throw new Error(response.error || 'Failed to uncomplete task');

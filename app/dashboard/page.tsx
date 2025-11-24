@@ -106,7 +106,7 @@ const generateCalendarDays = () => {
 
 function DashboardContent() {
   const { user, logout } = useAuth()
-  const { tasks, isLoading, fetchTasks, createHabit, createTodo, deleteTask, completeTask } = useTasks()
+  const { tasks, isLoading, fetchTasks, createHabit, createTodo, deleteTask, completeTask, uncompleteTask } = useTasks()
   const { handleTaskComplete } = useGamificationFeedback()
   
   // Estados locais para animações
@@ -134,30 +134,31 @@ function DashboardContent() {
   useEffect(() => {
     fetchTasks()
   }, [fetchTasks])
-  
-  // Log quando tasks mudam
-  useEffect(() => {
-    console.log('📋 [Dashboard] Tasks atualizadas:', tasks.length, 'tarefas')
-    tasks.forEach(task => {
-      if (task.task_type === 'habit') {
-        console.log(`  🎯 Hábito: ${task.title}`, {
-          id: task.id,
-          last_completed_at: task.last_completed_at,
-          completed_today: task.last_completed_at ? 'talvez' : 'não'
-        })
-      }
-    })
-  }, [tasks])
 
   const handleCompleteTask = async (id: string) => {
     if (!user) return
     
-    const oldLevel = user.level
-    const response = await completeTask(id)
+    // Verificar se a tarefa está completada
+    const task = tasks.find(t => t.id === id)
+    if (!task) return
     
-    if (response) {
-      handleTaskComplete(response, oldLevel)
+    const isCompleted = task.task_type === 'habit' 
+      ? isHabitCompletedToday(task)
+      : task.completed
+    
+    if (isCompleted) {
+      // Desconcluir
+      await uncompleteTask(id)
       await fetchTasks()
+    } else {
+      // Completar
+      const oldLevel = user.level
+      const response = await completeTask(id)
+      
+      if (response) {
+        handleTaskComplete(response, oldLevel)
+        await fetchTasks()
+      }
     }
   }
 
@@ -226,45 +227,21 @@ function DashboardContent() {
 
   const isHabitCompletedToday = (task: Task) => {
     if (task.task_type !== "habit") {
-      console.log(`⚠️ [isHabitCompletedToday] ${task.title}: não é hábito (${task.task_type})`)
       return false
     }
     
-    // 🔧 WORKAROUND: Verificar localStorage primeiro (porque backend não atualiza last_completed)
-    const today = new Date().toDateString()
-    const completionsKey = `habit_completions_${today}`
-    const completions = JSON.parse(localStorage.getItem(completionsKey) || '[]')
-    if (completions.includes(task.id)) {
-      console.log(`✅ [isHabitCompletedToday] ${task.title}: encontrado no localStorage`)
-      return true
-    }
-    
     if (!task.last_completed_at) {
-      console.log(`⚠️ [isHabitCompletedToday] ${task.title}: sem last_completed_at e não está no localStorage`)
       return false
     }
     
     const lastCompleted = new Date(task.last_completed_at)
     const todayDate = new Date()
     
-    const isCompleted = (
+    return (
       lastCompleted.getDate() === todayDate.getDate() &&
       lastCompleted.getMonth() === todayDate.getMonth() &&
       lastCompleted.getFullYear() === todayDate.getFullYear()
     )
-    
-    // Log para debug com mais detalhes
-    console.log(`🔍 [isHabitCompletedToday] ${task.title}:`, {
-      task_id: task.id,
-      task_type: task.task_type,
-      last_completed_at: task.last_completed_at,
-      lastCompleted_date: `${lastCompleted.getDate()}/${lastCompleted.getMonth()+1}/${lastCompleted.getFullYear()}`,
-      today_date: `${todayDate.getDate()}/${todayDate.getMonth()+1}/${todayDate.getFullYear()}`,
-      isCompleted,
-      '⭐ DEVERIA MOSTRAR CHECK?': isCompleted ? 'SIM ✅' : 'NÃO ❌'
-    })
-    
-    return isCompleted
   }
 
   const availableTags = useMemo(() => {
@@ -452,13 +429,13 @@ function DashboardContent() {
                           >
                             <div className="flex items-center gap-4">
                               <button
-                                onClick={() => !isCompleted && handleCompleteTask(task.id)}
-                                disabled={isCompleted}
-                                className={`w-8 h-8 rounded-full border-2 flex items-center justify-center transition-all flex-shrink-0 ${
+                                onClick={() => handleCompleteTask(task.id)}
+                                className={`w-8 h-8 rounded-full border-2 flex items-center justify-center transition-all flex-shrink-0 cursor-pointer ${
                                   isCompleted
-                                    ? "bg-green-500 border-green-500 text-white shadow-lg shadow-green-500/50"
+                                    ? "bg-green-500 border-green-500 text-white shadow-lg shadow-green-500/50 hover:bg-green-600"
                                     : "border-muted-foreground hover:border-primary hover:scale-110"
                                 }`}
+                                title={isCompleted ? "Clique para desconcluir" : "Clique para completar"}
                               >
                                 {isCompleted && <Check className="w-5 h-5 font-bold" />}
                               </button>
@@ -542,13 +519,13 @@ function DashboardContent() {
                           >
                             <div className="flex items-center gap-4">
                               <button
-                                onClick={() => !isCompleted && handleCompleteTask(task.id)}
-                                disabled={isCompleted}
-                                className={`w-8 h-8 rounded-full border-2 flex items-center justify-center transition-all flex-shrink-0 ${
+                                onClick={() => handleCompleteTask(task.id)}
+                                className={`w-8 h-8 rounded-full border-2 flex items-center justify-center transition-all flex-shrink-0 cursor-pointer ${
                                   isCompleted
-                                    ? "bg-green-500 border-green-500 text-white shadow-lg shadow-green-500/50"
+                                    ? "bg-green-500 border-green-500 text-white shadow-lg shadow-green-500/50 hover:bg-green-600"
                                     : "border-muted-foreground hover:border-primary hover:scale-110"
                                 }`}
+                                title={isCompleted ? "Clique para desconcluir" : "Clique para completar"}
                               >
                                 {isCompleted && <Check className="w-5 h-5 font-bold" />}
                               </button>

@@ -24,6 +24,7 @@ interface UseTasksReturn {
   updateTodo: (id: string, data: UpdateTodoRequest) => Promise<Task | null>
   deleteTask: (id: string, taskType: 'habit' | 'todo') => Promise<boolean>
   completeTask: (id: string) => Promise<CompleteTaskResponse | null>
+  uncompleteTask: (id: string) => Promise<boolean>
 }
 
 export function useTasks(): UseTasksReturn {
@@ -39,14 +40,13 @@ export function useTasks(): UseTasksReturn {
       setError(null)
       const fetchedTasks = await taskService.getTasks()
       
-      // Log detalhado das tarefas retornadas pela API
-      console.log('🔍 [fetchTasks] Tarefas retornadas pela API:', fetchedTasks.length)
+      // Debug: verificar se last_completed_at está vindo do backend
+      console.log('🔍 [fetchTasks] Hábitos com last_completed_at:')
       fetchedTasks.forEach(task => {
-        if (task.task_type === 'habit') {
-          console.log(`  📝 ${task.title}: TODAS AS PROPRIEDADES:`)
-          for (const [key, value] of Object.entries(task)) {
-            console.log(`     ${key}: ${value}`)
-          }
+        if (task.task_type === 'habit' && task.last_completed_at) {
+          console.log(`  ✅ ${task.title}: ${task.last_completed_at}`)
+        } else if (task.task_type === 'habit') {
+          console.log(`  ❌ ${task.title}: SEM last_completed_at`)
         }
       })
       
@@ -239,19 +239,6 @@ export function useTasks(): UseTasksReturn {
           }
           
           console.log("📝 [DEBUG] Tarefa atualizada:", updatedTask)
-          
-          // 🔧 WORKAROUND: Guardar completions localmente porque o backend não retorna last_completed
-          if (task.task_type === 'habit') {
-            const today = new Date().toDateString()
-            const completionsKey = `habit_completions_${today}`
-            const completions = JSON.parse(localStorage.getItem(completionsKey) || '[]')
-            if (!completions.includes(task.id)) {
-              completions.push(task.id)
-              localStorage.setItem(completionsKey, JSON.stringify(completions))
-              console.log(`💾 [DEBUG] Salvou completion local para ${task.id}`)
-            }
-          }
-          
           return updatedTask
         }
         return task
@@ -306,6 +293,64 @@ export function useTasks(): UseTasksReturn {
     }
   }
 
+  const uncompleteTask = async (id: string): Promise<boolean> => {
+    try {
+      setIsLoading(true)
+      setError(null)
+      
+      console.log("🔄 [DEBUG] Desconcluindo tarefa:", id)
+      
+      const response = await taskService.uncompleteTask(id)
+      
+      console.log("✅ [DEBUG] Tarefa desconcluída:", response)
+      
+      // Atualizar tarefa na lista - remover conclusão
+      setTasks(prev => prev.map(task => {
+        if (task.id === id) {
+          if (task.task_type === 'habit') {
+            return {
+              ...task,
+              // Hábitos: remover last_completed_at
+              last_completed_at: undefined,
+              current_streak: Math.max(0, (task.current_streak || 1) - 1),
+            }
+          } else {
+            return {
+              ...task,
+              // ToDos: desmarcar como completado
+              completed: false,
+            }
+          }
+        }
+        return task
+      }))
+      
+      // Atualizar XP do usuário (remover XP)
+      await fetchTasks() // Recarregar para pegar dados atualizados do backend
+      
+      toast({
+        title: "Tarefa desconcluída",
+        description: `XP removido: ${response.xp_removed}`,
+      })
+      
+      return true
+    } catch (err: any) {
+      console.error("❌ [DEBUG] Erro ao desconcluir tarefa:", err)
+      
+      const errorMessage = err.message || 'Erro ao desconcluir tarefa'
+      setError(errorMessage)
+      
+      toast({
+        title: "Erro ao desconcluir tarefa",
+        description: errorMessage,
+        variant: "destructive",
+      })
+      return false
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
   return {
     tasks,
     isLoading,
@@ -317,5 +362,6 @@ export function useTasks(): UseTasksReturn {
     updateTodo,
     deleteTask,
     completeTask,
+    uncompleteTask,
   }
 }

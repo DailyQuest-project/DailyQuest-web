@@ -576,6 +576,30 @@ function DashboardContent() {
           setEditingTask(null)
         }}
         onUpdate={handleUpdateTask}
+        availableTags={tags}
+        onManageTags={() => setTagManagerOpen(true)}
+        onAddTag={async (taskId, tagId) => {
+          try {
+            const { tagService } = await import('@/lib/api-service-complete')
+            await tagService.associateTag(taskId, tagId)
+            // Recarregar tasks para atualizar as tags
+            await fetchTasks()
+          } catch (error) {
+            console.error('Erro ao adicionar tag:', error)
+            throw error
+          }
+        }}
+        onRemoveTag={async (taskId, tagId) => {
+          try {
+            const { tagService } = await import('@/lib/api-service-complete')
+            await tagService.removeTag(taskId, tagId)
+            // Recarregar tasks para atualizar as tags
+            await fetchTasks()
+          } catch (error) {
+            console.error('Erro ao remover tag:', error)
+            throw error
+          }
+        }}
       />
 
       {/* Modal de Conquistas */}
@@ -605,7 +629,7 @@ function DashboardContent() {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="flex items-center gap-2">
-                <Shield className="w-6 h-6 text-primary" />
+                <img src="/logo.svg" alt="DailyQuest Logo" className="w-8 h-8" />
                 <h1 className="text-xl md:text-2xl font-bold text-foreground">Daily Quest</h1>
               </div>
             </div>
@@ -875,7 +899,14 @@ function DashboardContent() {
                                 </div>
                                 <div className="flex items-center gap-1 text-sm text-orange-500">
                                   <Flame className="w-4 h-4" />
-                                  {(task as any).current_streak || 0} dias
+                                  {(() => {
+                                    const streak = (task as any).current_streak || 0
+                                    // Se o streak é 0 mas a tarefa foi completada hoje, mostrar 1
+                                    if (streak === 0 && isCompleted) {
+                                      return "1 dia"
+                                    }
+                                    return `${streak} ${streak === 1 ? "dia" : "dias"}`
+                                  })()}
                                 </div>
                               </div>
 

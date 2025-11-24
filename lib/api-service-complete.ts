@@ -251,6 +251,30 @@ export const tagService = {
   },
 
   /**
+   * Atualizar - PUT http://localhost:8000/api/v1/tags/{tag_id}
+   */
+  async updateTag(tagId: string, updates: { name?: string; color?: string }): Promise<Tag> {
+    const response = await apiClient.put<Tag>(`/tags/${tagId}`, updates);
+    
+    if (response.error || !response.data) {
+      throw new Error(response.error || 'Failed to update tag');
+    }
+    
+    return response.data;
+  },
+
+  /**
+   * Deletar - DELETE http://localhost:8000/api/v1/tags/{tag_id}
+   */
+  async deleteTag(tagId: string): Promise<void> {
+    const response = await apiClient.delete(`/tags/${tagId}`);
+    
+    if (response.error) {
+      throw new Error(response.error || 'Failed to delete tag');
+    }
+  },
+
+  /**
    * Associar - POST http://localhost:8000/api/v1/tasks/{task_id}/tags/{tag_id}
    */
   async associateTag(taskId: string, tagId: string): Promise<void> {

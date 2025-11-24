@@ -57,7 +57,7 @@ function LoginPageContent() {
           {/* Logo */}
           <div className="flex items-center justify-center gap-2 mb-2">
             <div className="relative">
-              <Shield className="w-8 h-8 text-primary" />
+              <img src="/logo.svg" alt="DailyQuest Logo" className="w-12 h-12" />
             </div>
             <h1 className="text-2xl font-bold text-foreground">Daily Quest</h1>
           </div>

@@ -117,8 +117,7 @@ function RegisterPageContent() {
             {/* Logo */}
             <div className="flex items-center justify-center gap-2 mb-2">
               <div className="relative">
-                <Shield className="w-8 h-8 text-primary" />
-                <Sword className="w-4 h-4 text-secondary absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2" />
+                <img src="/logo.svg" alt="DailyQuest Logo" className="w-12 h-12" />
               </div>
               <h1 className="text-2xl font-bold text-foreground">Daily Quest</h1>
             </div>

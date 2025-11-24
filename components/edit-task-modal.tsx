@@ -9,14 +9,18 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent } from "@/components/ui/card"
-import { Task } from "@/lib/api-types-complete"
-import { Star, Repeat, CheckSquare } from "lucide-react"
+import { Task, Tag } from "@/lib/api-types-complete"
+import { Star, Repeat, CheckSquare, X, Plus, Settings } from "lucide-react"
 
 interface EditTaskModalProps {
   task: Task | null
   open: boolean
   onClose: () => void
   onUpdate: (id: string, data: any, taskType: 'habit' | 'todo') => Promise<void>
+  availableTags?: Tag[]
+  onManageTags?: () => void
+  onAddTag?: (taskId: string, tagId: string) => Promise<void>
+  onRemoveTag?: (taskId: string, tagId: string) => Promise<void>
 }
 
 const difficultyOptions = [
@@ -31,7 +35,16 @@ const frequencyOptions = [
   { value: "SPECIFIC_DAYS", label: "Dias específicos", description: "Escolha os dias" },
 ]
 
-export function EditTaskModal({ task, open, onClose, onUpdate }: EditTaskModalProps) {
+export function EditTaskModal({ 
+  task, 
+  open, 
+  onClose, 
+  onUpdate,
+  availableTags = [],
+  onManageTags,
+  onAddTag,
+  onRemoveTag
+}: EditTaskModalProps) {
   const [formData, setFormData] = useState({
     title: "",
     description: "",
@@ -42,6 +55,8 @@ export function EditTaskModal({ task, open, onClose, onUpdate }: EditTaskModalPr
     deadline: "",
   })
   const [isLoading, setIsLoading] = useState(false)
+  const [selectedTags, setSelectedTags] = useState<Tag[]>([])
+  const [isAddingTag, setIsAddingTag] = useState(false)
 
   // Preencher formulário quando a tarefa mudar
   useEffect(() => {
@@ -58,8 +73,36 @@ export function EditTaskModal({ task, open, onClose, onUpdate }: EditTaskModalPr
           ? new Date((task as any).deadline).toISOString().split('T')[0] 
           : "",
       })
+      // Inicializar tags selecionadas
+      setSelectedTags(task.tags || [])
     }
   }, [task])
+
+  const handleAddTag = async (tagId: string) => {
+    if (!task || !onAddTag) return
+    setIsAddingTag(true)
+    try {
+      await onAddTag(task.id, tagId)
+      const addedTag = availableTags.find(t => t.id === tagId)
+      if (addedTag) {
+        setSelectedTags(prev => [...prev, addedTag])
+      }
+    } catch (error) {
+      console.error("Erro ao adicionar tag:", error)
+    } finally {
+      setIsAddingTag(false)
+    }
+  }
+
+  const handleRemoveTag = async (tagId: string) => {
+    if (!task || !onRemoveTag) return
+    try {
+      await onRemoveTag(task.id, tagId)
+      setSelectedTags(prev => prev.filter(t => t.id !== tagId))
+    } catch (error) {
+      console.error("Erro ao remover tag:", error)
+    }
+  }
 
   const selectedDifficulty = difficultyOptions.find((d) => d.value === formData.difficulty)
   const selectedFrequency = frequencyOptions.find((f) => f.value === formData.frequency)
@@ -148,6 +191,105 @@ export function EditTaskModal({ task, open, onClose, onUpdate }: EditTaskModalPr
                 className="glass bg-transparent resize-none"
               />
             </div>
+          </div>
+
+          {/* Tags Section */}
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <Label>Tags</Label>
+              {onManageTags && (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={onManageTags}
+                  className="h-7 text-xs gap-1"
+                >
+                  <Settings className="w-3 h-3" />
+                  Gerenciar Tags
+                </Button>
+              )}
+            </div>
+
+            {/* Tags Selecionadas */}
+            {selectedTags.length > 0 && (
+              <div className="flex flex-wrap gap-2">
+                {selectedTags.map((tag) => (
+                  <Badge
+                    key={tag.id}
+                    variant="outline"
+                    className="gap-1 pr-1"
+                    style={{
+                      borderColor: tag.color || undefined,
+                      color: tag.color || undefined,
+                    }}
+                  >
+                    {tag.name}
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveTag(tag.id)}
+                      className="ml-1 hover:bg-destructive/20 rounded-full p-0.5"
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
+                  </Badge>
+                ))}
+              </div>
+            )}
+
+            {/* Adicionar Tags */}
+            {availableTags.length > 0 && (
+              <div className="space-y-2">
+                <p className="text-xs text-muted-foreground">Adicionar tags:</p>
+                <div className="flex flex-wrap gap-2 max-h-32 overflow-y-auto p-2 rounded-lg bg-muted/30">
+                  {availableTags
+                    .filter(tag => !selectedTags.find(st => st.id === tag.id))
+                    .map((tag) => (
+                      <button
+                        key={tag.id}
+                        type="button"
+                        onClick={() => handleAddTag(tag.id)}
+                        disabled={isAddingTag}
+                        className="group"
+                      >
+                        <Badge
+                          variant="outline"
+                          className="gap-1 cursor-pointer hover:bg-primary/10 transition-colors"
+                          style={{
+                            borderColor: tag.color || undefined,
+                            color: tag.color || undefined,
+                          }}
+                        >
+                          <Plus className="w-3 h-3 group-hover:scale-110 transition-transform" />
+                          {tag.name}
+                        </Badge>
+                      </button>
+                    ))}
+                  {availableTags.filter(tag => !selectedTags.find(st => st.id === tag.id)).length === 0 && (
+                    <p className="text-xs text-muted-foreground italic">
+                      Todas as tags foram adicionadas
+                    </p>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {availableTags.length === 0 && (
+              <div className="text-center py-4 text-sm text-muted-foreground">
+                <p>Nenhuma tag disponível.</p>
+                {onManageTags && (
+                  <Button
+                    type="button"
+                    variant="link"
+                    size="sm"
+                    onClick={onManageTags}
+                    className="mt-2"
+                  >
+                    Criar sua primeira tag
+                  </Button>
+                )}
+              </div>
+            )}
           </div>
 
           {/* Frequência (apenas para hábitos) */}

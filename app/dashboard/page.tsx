@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState, useMemo } from "react"
+import { useEffect, useState, useMemo, useCallback } from "react"
 import { useAuth } from "@/hooks/use-auth"
 import { useTasks } from "@/hooks/use-tasks"
 import { useTags } from "@/hooks/use-tags"
@@ -83,28 +83,19 @@ const getDifficultyText = (difficulty: string) => {
   }
 }
 
-const generateCalendarDays = () => {
-  const today = new Date()
-  const year = today.getFullYear()
-  const month = today.getMonth()
-  const firstDay = new Date(year, month, 1)
-  const lastDay = new Date(year, month + 1, 0)
-  const daysInMonth = lastDay.getDate()
-  const startingDayOfWeek = firstDay.getDay()
+interface CalendarDay {
+  day: number
+  isCompleted: boolean
+  isToday: boolean
+  date: Date
+}
 
-  const days = []
-
-  for (let i = 0; i < startingDayOfWeek; i++) {
-    days.push(null)
-  }
-
-  for (let day = 1; day <= daysInMonth; day++) {
-    const isCompleted = Math.random() > 0.3
-    const isToday = day === today.getDate()
-    days.push({ day, isCompleted, isToday })
-  }
-
-  return days
+interface CompletionHistoryItem {
+  id: string
+  task_id: string
+  user_id: string
+  completed_date: string
+  xp_earned: number
 }
 
 function DashboardContent() {
@@ -135,13 +126,105 @@ function DashboardContent() {
   const [editingTask, setEditingTask] = useState<Task | null>(null)
   const [editModalOpen, setEditModalOpen] = useState(false)
   const [tagManagerOpen, setTagManagerOpen] = useState(false)
-  const [calendarDays] = useState(generateCalendarDays())
-  const [currentMonth] = useState(new Date().toLocaleDateString("pt-BR", { month: "long", year: "numeric" }))
+  
+  // Estados do calendário
+  const [currentCalendarDate, setCurrentCalendarDate] = useState(new Date())
+  const [completionHistory, setCompletionHistory] = useState<CompletionHistoryItem[]>([])
+  const [calendarDays, setCalendarDays] = useState<(CalendarDay | null)[]>([])
 
+  // Gerar dias do calendário
+  const generateCalendarDays = useCallback((date: Date, history: CompletionHistoryItem[]) => {
+    const year = date.getFullYear()
+    const month = date.getMonth()
+    const firstDay = new Date(year, month, 1)
+    const lastDay = new Date(year, month + 1, 0)
+    const daysInMonth = lastDay.getDate()
+    const startingDayOfWeek = firstDay.getDay()
+    
+    const today = new Date()
+    const days: (CalendarDay | null)[] = []
+
+    // Adicionar espaços vazios para alinhar com o dia da semana
+    for (let i = 0; i < startingDayOfWeek; i++) {
+      days.push(null)
+    }
+
+    // Adicionar todos os dias do mês
+    for (let day = 1; day <= daysInMonth; day++) {
+      const dayDate = new Date(year, month, day)
+      const dateStr = dayDate.toISOString().split('T')[0]
+      
+      // Verificar se tem alguma tarefa completada neste dia
+      const isCompleted = history.some(item => {
+        const completedDate = new Date(item.completed_date).toISOString().split('T')[0]
+        return completedDate === dateStr
+      })
+      
+      // Verificar se é hoje
+      const isToday = 
+        day === today.getDate() && 
+        month === today.getMonth() && 
+        year === today.getFullYear()
+      
+      days.push({ 
+        day, 
+        isCompleted, 
+        isToday,
+        date: dayDate
+      })
+    }
+
+    return days
+  }, [])
+
+  // Buscar histórico de completions
+  const fetchCompletionHistory = useCallback(async () => {
+    try {
+      const { dashboardService } = await import('@/lib/api-service-complete')
+      const data = await dashboardService.getHistory()
+      // O backend retorna { entries: [...] } mas precisamos só do array
+      setCompletionHistory(Array.isArray(data) ? data : [])
+    } catch (error) {
+      console.error('Erro ao buscar histórico:', error)
+      setCompletionHistory([])
+    }
+  }, [])
+
+  // Atualizar calendário quando mudar o mês ou o histórico
+  useEffect(() => {
+    setCalendarDays(generateCalendarDays(currentCalendarDate, completionHistory))
+  }, [currentCalendarDate, completionHistory, generateCalendarDays])
+
+  // Buscar dados iniciais
   useEffect(() => {
     fetchTasks()
     fetchTags()
-  }, [fetchTasks, fetchTags])
+    fetchCompletionHistory()
+  }, [fetchTasks, fetchTags, fetchCompletionHistory])
+
+  // Navegar para o mês anterior
+  const goToPreviousMonth = () => {
+    setCurrentCalendarDate(prev => {
+      const newDate = new Date(prev)
+      newDate.setMonth(newDate.getMonth() - 1)
+      return newDate
+    })
+  }
+
+  // Navegar para o próximo mês
+  const goToNextMonth = () => {
+    setCurrentCalendarDate(prev => {
+      const newDate = new Date(prev)
+      newDate.setMonth(newDate.getMonth() + 1)
+      return newDate
+    })
+  }
+
+  // Formatar o mês atual
+  const currentMonth = currentCalendarDate.toLocaleDateString("pt-BR", { 
+    month: "long", 
+    year: "numeric" 
+  })
 
   const handleCompleteTask = async (id: string) => {
     if (!user) return
@@ -158,6 +241,7 @@ function DashboardContent() {
       // Desconcluir - permitir que o usuário desfaça a conclusão
       await uncompleteTask(id)
       await fetchTasks()
+      await fetchCompletionHistory() // Atualizar calendário
     } else {
       // Completar - uma vez por dia para hábitos
       const oldLevel = user.level
@@ -166,6 +250,7 @@ function DashboardContent() {
       if (response) {
         handleTaskComplete(response, oldLevel)
         await fetchTasks()
+        await fetchCompletionHistory() // Atualizar calendário
       }
     }
   }
@@ -810,10 +895,20 @@ function DashboardContent() {
                 <div className="flex items-center justify-between">
                   <CardTitle className="text-base">Seu Progresso</CardTitle>
                   <div className="flex items-center gap-1">
-                    <Button variant="ghost" size="sm" className="h-6 w-6 p-0">
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      className="h-6 w-6 p-0"
+                      onClick={goToPreviousMonth}
+                    >
                       <ChevronLeft className="w-4 h-4" />
                     </Button>
-                    <Button variant="ghost" size="sm" className="h-6 w-6 p-0">
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      className="h-6 w-6 p-0"
+                      onClick={goToNextMonth}
+                    >
                       <ChevronRight className="w-4 h-4" />
                     </Button>
                   </div>

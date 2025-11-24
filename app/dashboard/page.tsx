@@ -11,6 +11,7 @@ import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { CreateHabitModal } from "@/components/create-habit-modal"
+import { EditTaskModal } from "@/components/edit-task-modal"
 import { HabitFilters, type FilterState } from "@/components/habit-filters"
 import { ThemeToggle } from "@/components/theme-toggle"
 import { MobileNav } from "@/components/mobile-nav"
@@ -106,7 +107,7 @@ const generateCalendarDays = () => {
 
 function DashboardContent() {
   const { user, logout } = useAuth()
-  const { tasks, isLoading, fetchTasks, createHabit, createTodo, deleteTask, completeTask, uncompleteTask } = useTasks()
+  const { tasks, isLoading, fetchTasks, createHabit, createTodo, updateHabit, updateTodo, deleteTask, completeTask, uncompleteTask } = useTasks()
   const { handleTaskComplete } = useGamificationFeedback()
   
   // Estados locais para animações
@@ -128,6 +129,8 @@ function DashboardContent() {
   })
   const [soundEnabled, setSoundEnabled] = useState(true)
   const [profileOpen, setProfileOpen] = useState(false)
+  const [editingTask, setEditingTask] = useState<Task | null>(null)
+  const [editModalOpen, setEditModalOpen] = useState(false)
   const [calendarDays] = useState(generateCalendarDays())
   const [currentMonth] = useState(new Date().toLocaleDateString("pt-BR", { month: "long", year: "numeric" }))
 
@@ -147,11 +150,11 @@ function DashboardContent() {
       : task.completed
     
     if (isCompleted) {
-      // Desconcluir
+      // Desconcluir - permitir que o usuário desfaça a conclusão
       await uncompleteTask(id)
       await fetchTasks()
     } else {
-      // Completar
+      // Completar - uma vez por dia para hábitos
       const oldLevel = user.level
       const response = await completeTask(id)
       
@@ -183,7 +186,9 @@ function DashboardContent() {
         title: data.title,
         description: data.description || "",
         difficulty: data.difficulty?.toUpperCase() || "EASY",
-        frequency_type: FrequencyType.DAILY, // Por enquanto sempre DAILY
+        frequency_type: data.frequency || FrequencyType.DAILY,
+        frequency_target_times: data.frequency_target_times,
+        frequency_days: data.frequency_days,
       }
       
       console.log("📤 [Dashboard] Criando hábito:", habitData)
@@ -193,6 +198,22 @@ function DashboardContent() {
 
   const handleDeleteTask = async (id: string, taskType: 'habit' | 'todo') => {
     await deleteTask(id, taskType)
+  }
+
+  const handleEditTask = (task: Task) => {
+    setEditingTask(task)
+    setEditModalOpen(true)
+  }
+
+  const handleUpdateTask = async (id: string, data: any, taskType: 'habit' | 'todo') => {
+    if (taskType === 'habit') {
+      await updateHabit(id, data)
+    } else {
+      await updateTodo(id, data)
+    }
+    setEditModalOpen(false)
+    setEditingTask(null)
+    await fetchTasks()
   }
 
   // Filtrar tarefas
@@ -244,6 +265,43 @@ function DashboardContent() {
     )
   }
 
+  const getFrequencyDisplay = (task: Task) => {
+    if (task.task_type !== "habit") return null
+    
+    const habitTask = task as any
+    const frequencyType = habitTask.frequency_type
+    
+    if (frequencyType === "DAILY") {
+      return { text: "Diário", icon: "📅" }
+    } else if (frequencyType === "WEEKLY_TIMES") {
+      const times = habitTask.frequency_target_times || 3
+      return { text: `${times}x por semana`, icon: "📊" }
+    } else if (frequencyType === "SPECIFIC_DAYS") {
+      const days = habitTask.frequency_days || []
+      const dayLabels = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"]
+      const selectedDays = days.map((d: number) => dayLabels[d]).join(", ")
+      return { text: selectedDays || "Dias específicos", icon: "📆", days }
+    }
+    
+    return { text: "Flexível", icon: "🔄" }
+  }
+
+  const isDayActive = (task: Task, dayIndex: number) => {
+    if (task.task_type !== "habit") return false
+    
+    const habitTask = task as any
+    const frequencyType = habitTask.frequency_type
+    
+    if (frequencyType === "DAILY") {
+      return true // Todos os dias
+    } else if (frequencyType === "SPECIFIC_DAYS") {
+      const days = habitTask.frequency_days || []
+      return days.includes(dayIndex)
+    }
+    
+    return false // WEEKLY_TIMES não usa indicadores de dia
+  }
+
   const availableTags = useMemo(() => {
     const tags = new Set<string>()
     // Tags virão do backend posteriormente
@@ -276,6 +334,17 @@ function DashboardContent() {
       />
       <CoinAnimation coins={coinGainAmount} show={showCoinGain} onComplete={() => setShowCoinGain(false)} />
       <ConfettiCelebration show={showConfetti} onComplete={() => setShowConfetti(false)} />
+      
+      {/* Modal de Edição */}
+      <EditTaskModal
+        task={editingTask}
+        open={editModalOpen}
+        onClose={() => {
+          setEditModalOpen(false)
+          setEditingTask(null)
+        }}
+        onUpdate={handleUpdateTask}
+      />
 
       <header className="glass-strong border-b border-border sticky top-0 z-50">
         <div className="container mx-auto px-4 py-4">
@@ -455,6 +524,68 @@ function DashboardContent() {
                                 {task.description && (
                                   <p className="text-sm text-muted-foreground">{task.description}</p>
                                 )}
+                                
+                                {/* Frequência do hábito */}
+                                {task.task_type === "habit" && (() => {
+                                  const frequency = getFrequencyDisplay(task)
+                                  const habitTask = task as any
+                                  const today = new Date().getDay()
+                                  
+                                  return (
+                                    <div className="mt-2 space-y-1">
+                                      <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                                        <span>{frequency?.icon}</span>
+                                        <span>{frequency?.text}</span>
+                                      </div>
+                                      
+                                      {habitTask.frequency_type === "SPECIFIC_DAYS" && (
+                                        <div className="flex gap-1 mt-1.5">
+                                          {["D", "S", "T", "Q", "Q", "S", "S"].map((day, index) => {
+                                            const isActive = isDayActive(task, index)
+                                            const isToday = index === today
+                                            
+                                            return (
+                                              <div
+                                                key={index}
+                                                className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-medium transition-all ${
+                                                  isActive
+                                                    ? isToday
+                                                      ? "bg-primary text-primary-foreground ring-2 ring-primary ring-offset-2 ring-offset-background"
+                                                      : "bg-primary/20 text-primary"
+                                                    : "bg-muted/50 text-muted-foreground/50"
+                                                }`}
+                                                title={isActive ? "Dia ativo" : "Dia inativo"}
+                                              >
+                                                {day}
+                                              </div>
+                                            )
+                                          })}
+                                        </div>
+                                      )}
+                                      
+                                      {habitTask.frequency_type === "DAILY" && (
+                                        <div className="flex gap-1 mt-1.5">
+                                          {["D", "S", "T", "Q", "Q", "S", "S"].map((day, index) => {
+                                            const isToday = index === today
+                                            
+                                            return (
+                                              <div
+                                                key={index}
+                                                className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-medium ${
+                                                  isToday
+                                                    ? "bg-primary text-primary-foreground ring-2 ring-primary ring-offset-2 ring-offset-background"
+                                                    : "bg-primary/20 text-primary"
+                                                }`}
+                                              >
+                                                {day}
+                                              </div>
+                                            )
+                                          })}
+                                        </div>
+                                      )}
+                                    </div>
+                                  )
+                                })()}
                               </div>
 
                               <div className="text-right space-y-1 flex-shrink-0">
@@ -474,7 +605,7 @@ function DashboardContent() {
                                   </Button>
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent align="end" className="glass-strong">
-                                  <DropdownMenuItem>
+                                  <DropdownMenuItem onClick={() => handleEditTask(task)}>
                                     <Edit className="w-4 h-4 mr-2" />
                                     Editar
                                   </DropdownMenuItem>
@@ -565,7 +696,7 @@ function DashboardContent() {
                                   </Button>
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent align="end" className="glass-strong">
-                                  <DropdownMenuItem>
+                                  <DropdownMenuItem onClick={() => handleEditTask(task)}>
                                     <Edit className="w-4 h-4 mr-2" />
                                     Editar
                                   </DropdownMenuItem>

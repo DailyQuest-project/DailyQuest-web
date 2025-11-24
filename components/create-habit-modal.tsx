@@ -29,10 +29,9 @@ const habitTypes = [
 ]
 
 const frequencyOptions = [
-  { value: "daily", label: "Diariamente", description: "Todos os dias" },
-  { value: "weekly", label: "Semanalmente", description: "1 vez por semana" },
-  { value: "3x-week", label: "3x por semana", description: "3 vezes na semana" },
-  { value: "flexible", label: "Flexível", description: "Sem frequência fixa" },
+  { value: "DAILY", label: "Diariamente", description: "Todos os dias da semana" },
+  { value: "WEEKLY_TIMES", label: "X vezes por semana", description: "Defina quantas vezes" },
+  { value: "SPECIFIC_DAYS", label: "Dias específicos", description: "Escolha os dias" },
 ]
 
 const predefinedTags = ["saúde", "educação", "trabalho", "fitness", "mental", "social", "criatividade", "finanças"]
@@ -44,7 +43,9 @@ export function CreateHabitModal({ onCreateHabit, children }: CreateHabitModalPr
     description: "",
     difficulty: "medium",
     type: "habit",
-    frequency: "daily",
+    frequency: "DAILY",
+    frequency_target_times: 3,
+    frequency_days: [] as number[],
     deadline: "",
     tags: [] as string[],
     newTag: "",
@@ -63,6 +64,16 @@ export function CreateHabitModal({ onCreateHabit, children }: CreateHabitModalPr
       return
     }
 
+    if (formData.type === "habit" && formData.frequency === "WEEKLY_TIMES" && (!formData.frequency_target_times || formData.frequency_target_times < 1 || formData.frequency_target_times > 7)) {
+      alert("Por favor, selecione quantas vezes por semana (1-7).")
+      return
+    }
+
+    if (formData.type === "habit" && formData.frequency === "SPECIFIC_DAYS" && formData.frequency_days.length === 0) {
+      alert("Por favor, selecione pelo menos um dia da semana.")
+      return
+    }
+
     const newHabit = {
       id: Date.now(),
       title: formData.title,
@@ -74,6 +85,8 @@ export function CreateHabitModal({ onCreateHabit, children }: CreateHabitModalPr
       streak: 0,
       tags: formData.tags,
       frequency: formData.type === "habit" ? formData.frequency : undefined,
+      frequency_target_times: formData.type === "habit" && formData.frequency === "WEEKLY_TIMES" ? formData.frequency_target_times : undefined,
+      frequency_days: formData.type === "habit" && formData.frequency === "SPECIFIC_DAYS" ? formData.frequency_days : undefined,
       deadline: formData.type === "todo" ? formData.deadline : undefined,
       weeklyProgress: formData.type === "habit" ? 0 : undefined,
       weeklyTarget: formData.type === "habit" ? getWeeklyTarget(formData.frequency) : undefined,
@@ -85,7 +98,9 @@ export function CreateHabitModal({ onCreateHabit, children }: CreateHabitModalPr
       description: "",
       difficulty: "medium",
       type: "habit",
-      frequency: "daily",
+      frequency: "DAILY",
+      frequency_target_times: 3,
+      frequency_days: [],
       deadline: "",
       tags: [],
       newTag: "",
@@ -185,27 +200,90 @@ export function CreateHabitModal({ onCreateHabit, children }: CreateHabitModalPr
           </div>
 
           {formData.type === "habit" && (
-            <div>
-              <Label>Frequência Desejada</Label>
-              <div className="grid grid-cols-2 gap-3 mt-2">
-                {frequencyOptions.map((frequency) => (
-                  <Card
-                    key={frequency.value}
-                    className={`cursor-pointer transition-all hover:scale-105 ${
-                      formData.frequency === frequency.value
-                        ? "ring-2 ring-primary bg-primary/10"
-                        : "glass hover:bg-card/90"
-                    }`}
-                    onClick={() => setFormData((prev) => ({ ...prev, frequency: frequency.value }))}
-                  >
-                    <CardContent className="p-3 text-center">
-                      <div className="font-medium text-sm">{frequency.label}</div>
-                      <div className="text-xs text-muted-foreground mt-1">{frequency.description}</div>
-                    </CardContent>
-                  </Card>
-                ))}
+            <>
+              <div>
+                <Label>Frequência Desejada</Label>
+                <div className="grid grid-cols-2 gap-3 mt-2">
+                  {frequencyOptions.map((frequency) => (
+                    <Card
+                      key={frequency.value}
+                      className={`cursor-pointer transition-all hover:scale-105 ${
+                        formData.frequency === frequency.value
+                          ? "ring-2 ring-primary bg-primary/10"
+                          : "glass hover:bg-card/90"
+                      }`}
+                      onClick={() => setFormData((prev) => ({ ...prev, frequency: frequency.value }))}
+                    >
+                      <CardContent className="p-3 text-center">
+                        <div className="font-medium text-sm">{frequency.label}</div>
+                        <div className="text-xs text-muted-foreground mt-1">{frequency.description}</div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
               </div>
-            </div>
+
+              {formData.frequency === "WEEKLY_TIMES" && (
+                <div>
+                  <Label htmlFor="frequency_target_times">Quantas vezes por semana? *</Label>
+                  <Input
+                    id="frequency_target_times"
+                    type="number"
+                    min={1}
+                    max={7}
+                    value={formData.frequency_target_times}
+                    onChange={(e) => setFormData((prev) => ({ 
+                      ...prev, 
+                      frequency_target_times: parseInt(e.target.value) || 1 
+                    }))}
+                    className="glass"
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">
+                    De 1 a 7 vezes na semana
+                  </p>
+                </div>
+              )}
+
+              {formData.frequency === "SPECIFIC_DAYS" && (
+                <div>
+                  <Label>Dias da semana *</Label>
+                  <div className="grid grid-cols-7 gap-2 mt-2">
+                    {[
+                      { day: 0, label: "S" },
+                      { day: 1, label: "T" },
+                      { day: 2, label: "Q" },
+                      { day: 3, label: "Q" },
+                      { day: 4, label: "S" },
+                      { day: 5, label: "S" },
+                      { day: 6, label: "D" }
+                    ].map(({ day, label }) => (
+                      <button
+                        key={day}
+                        type="button"
+                        onClick={() => {
+                          setFormData((prev) => ({
+                            ...prev,
+                            frequency_days: prev.frequency_days.includes(day)
+                              ? prev.frequency_days.filter((d) => d !== day)
+                              : [...prev.frequency_days, day].sort()
+                          }));
+                        }}
+                        className={`h-10 rounded-lg font-medium text-sm transition-all ${
+                          formData.frequency_days.includes(day)
+                            ? "bg-primary text-primary-foreground"
+                            : "glass hover:bg-card/90"
+                        }`}
+                      >
+                        {label}
+                      </button>
+                    ))}
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Selecione os dias que deseja realizar o hábito
+                  </p>
+                </div>
+              )}
+            </>
           )}
 
           {formData.type === "todo" && (

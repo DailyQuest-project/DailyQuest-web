@@ -14,6 +14,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { CreateHabitModal } from "@/components/create-habit-modal"
 import { EditTaskModal } from "@/components/edit-task-modal"
 import { TagManagerModal } from "@/components/tag-manager-modal"
+import { UserProfileModal } from "@/components/user-profile-modal"
 import { HabitFilters, type FilterState } from "@/components/habit-filters"
 import { ThemeToggle } from "@/components/theme-toggle"
 import { MobileNav } from "@/components/mobile-nav"
@@ -131,8 +132,58 @@ function DashboardContent() {
   const [currentCalendarDate, setCurrentCalendarDate] = useState(new Date())
   const [completionHistory, setCompletionHistory] = useState<CompletionHistoryItem[]>([])
   const [calendarDays, setCalendarDays] = useState<(CalendarDay | null)[]>([])
-
-  // Gerar dias do calendário
+  
+  // Estados de achievements
+  const [achievements, setAchievements] = useState<any[]>([
+    {
+      id: 1,
+      name: "Primeiro Passo",
+      description: "Complete sua primeira tarefa",
+      icon: "🎯",
+      unlocked: false,
+      rarity: "comum"
+    },
+    {
+      id: 2,
+      name: "Sequência de 7 Dias",
+      description: "Mantenha uma sequência de 7 dias",
+      icon: "🔥",
+      unlocked: false,
+      rarity: "raro"
+    },
+    {
+      id: 3,
+      name: "Mestre das Tarefas",
+      description: "Complete 100 tarefas",
+      icon: "🏆",
+      unlocked: false,
+      rarity: "épico"
+    },
+    {
+      id: 4,
+      name: "Madrugador",
+      description: "Complete uma tarefa antes das 8h",
+      icon: "🌅",
+      unlocked: false,
+      rarity: "comum"
+    },
+    {
+      id: 5,
+      name: "Perfeição",
+      description: "Complete todas as tarefas do dia por 30 dias",
+      icon: "💎",
+      unlocked: false,
+      rarity: "lendário"
+    },
+    {
+      id: 6,
+      name: "Colecionador",
+      description: "Crie 10 hábitos diferentes",
+      icon: "📚",
+      unlocked: false,
+      rarity: "raro"
+    }
+  ])
   const generateCalendarDays = useCallback((date: Date, history: CompletionHistoryItem[]) => {
     const year = date.getFullYear()
     const month = date.getMonth()
@@ -190,6 +241,32 @@ function DashboardContent() {
     }
   }, [])
 
+  // Buscar achievements (futuramente do backend)
+  const fetchAchievements = useCallback(async () => {
+    try {
+      // TODO: Implementar quando o backend tiver endpoint de achievements
+      // const { achievementService } = await import('@/lib/api-service-complete')
+      // const data = await achievementService.getMyAchievements()
+      // setAchievements(data)
+      
+      // Por enquanto, usar dados mock
+      console.log('Achievements carregadas (mock)')
+    } catch (error) {
+      console.error('Erro ao buscar achievements:', error)
+    }
+  }, [])
+
+  // Atualizar perfil do usuário
+  const handleUpdateUserProfile = useCallback(async (userData: any) => {
+    try {
+      // TODO: Implementar atualização do perfil no backend
+      console.log('Atualizar perfil:', userData)
+      // Por enquanto, apenas log
+    } catch (error) {
+      console.error('Erro ao atualizar perfil:', error)
+    }
+  }, [])
+
   // Atualizar calendário quando mudar o mês ou o histórico
   useEffect(() => {
     setCalendarDays(generateCalendarDays(currentCalendarDate, completionHistory))
@@ -200,7 +277,8 @@ function DashboardContent() {
     fetchTasks()
     fetchTags()
     fetchCompletionHistory()
-  }, [fetchTasks, fetchTags, fetchCompletionHistory])
+    fetchAchievements()
+  }, [fetchTasks, fetchTags, fetchCompletionHistory, fetchAchievements])
 
   // Navegar para o mês anterior
   const goToPreviousMonth = () => {
@@ -443,6 +521,32 @@ function DashboardContent() {
       <CoinAnimation coins={coinGainAmount} show={showCoinGain} onComplete={() => setShowCoinGain(false)} />
       <ConfettiCelebration show={showConfetti} onComplete={() => setShowConfetti(false)} />
       
+      {/* Modal de Perfil do Usuário */}
+      <UserProfileModal
+        open={profileOpen}
+        onOpenChange={setProfileOpen}
+        userData={{
+          name: user.username,
+          level: user.level,
+          xp: user.xp,
+          xpToNext: xpForNextLevel,
+          coins: user.coins,
+          streak: 0, // TODO: Calcular streak real
+          avatar: "🧙‍♂️", // TODO: Permitir que usuário escolha
+        }}
+        habits={tasks.filter(t => t.task_type === "habit")}
+        achievements={achievements}
+        completedHabits={new Set(
+          tasks
+            .filter(t => t.task_type === "habit" && isHabitCompletedToday(t))
+            .map(t => Number(t.id))
+        )}
+        onUpdateUser={handleUpdateUserProfile}
+      >
+        {/* Não precisa de children quando controlado */}
+        <span></span>
+      </UserProfileModal>
+      
       {/* Modal de Edição */}
       <EditTaskModal
         task={editingTask}
@@ -521,6 +625,10 @@ function DashboardContent() {
                       <p className="text-xs text-muted-foreground">{user.email}</p>
                     </div>
                     <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={() => setProfileOpen(true)}>
+                      <Trophy className="mr-2 h-4 w-4" />
+                      Ver Perfil
+                    </DropdownMenuItem>
                     <DropdownMenuItem>
                       <Settings className="mr-2 h-4 w-4" />
                       Configurações

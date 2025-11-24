@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { useState } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -37,6 +37,8 @@ interface UserProfileModalProps {
   completedHabits: Set<number>
   children: React.ReactNode
   onUpdateUser: (userData: any) => void
+  open?: boolean
+  onOpenChange?: (open: boolean) => void
 }
 
 const avatarOptions = [
@@ -62,13 +64,127 @@ export function UserProfileModal({
   completedHabits,
   children,
   onUpdateUser,
+  open: controlledOpen,
+  onOpenChange,
 }: UserProfileModalProps) {
-  const [open, setOpen] = useState(false)
+  const [internalOpen, setInternalOpen] = useState(false)
+  const open = controlledOpen !== undefined ? controlledOpen : internalOpen
+  const setOpen = onOpenChange || setInternalOpen
+  
   const [editMode, setEditMode] = useState(false)
   const [formData, setFormData] = useState({
     name: userData.name,
     avatar: userData.avatar,
   })
+
+  // Estados para dados da API
+  const [completionHistory, setCompletionHistory] = useState<any[]>([])
+  const [currentMonth, setCurrentMonth] = useState(new Date())
+  const [isLoadingHistory, setIsLoadingHistory] = useState(false)
+
+  // Buscar histórico de completions
+  const fetchCompletionHistory = useCallback(async () => {
+    setIsLoadingHistory(true)
+    try {
+      const { dashboardService } = await import('@/lib/api-service-complete')
+      const data = await dashboardService.getHistory()
+      console.log('📊 Dados do histórico recebidos:', data)
+      
+      // O backend retorna uma lista direta, não um objeto com entries
+      const historyArray = Array.isArray(data) ? data : (data.entries || [])
+      console.log('📊 History array:', historyArray)
+      setCompletionHistory(historyArray)
+    } catch (error) {
+      console.error('Erro ao buscar histórico:', error)
+      setCompletionHistory([])
+    } finally {
+      setIsLoadingHistory(false)
+    }
+  }, [])
+
+  // Buscar dados quando o modal abre
+  useEffect(() => {
+    if (open) {
+      fetchCompletionHistory()
+    }
+  }, [open, fetchCompletionHistory])
+
+  // Calcular XP por mês baseado no histórico
+  const getMonthlyXP = useCallback(() => {
+    const monthlyData: { [key: string]: number } = {}
+    const months = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez']
+    
+    // Inicializar últimos 6 meses
+    const currentDate = new Date()
+    for (let i = 5; i >= 0; i--) {
+      const date = new Date(currentDate.getFullYear(), currentDate.getMonth() - i, 1)
+      const monthKey = months[date.getMonth()]
+      monthlyData[monthKey] = 0
+    }
+
+    // Somar XP por mês
+    completionHistory.forEach(item => {
+      const date = new Date(item.completed_date) // campo correto do backend: completed_date
+      const monthKey = months[date.getMonth()]
+      if (monthlyData.hasOwnProperty(monthKey)) {
+        monthlyData[monthKey] += item.xp_earned || 0
+      }
+    })
+
+    return Object.entries(monthlyData).map(([month, xp]) => ({ month, xp }))
+  }, [completionHistory])
+
+  // Calcular tarefas completadas por dia no mês atual
+  const getCalendarData = useCallback(() => {
+    const year = currentMonth.getFullYear()
+    const month = currentMonth.getMonth()
+    const firstDay = new Date(year, month, 1)
+    const lastDay = new Date(year, month + 1, 0)
+    const daysInMonth = lastDay.getDate()
+    const startingDayOfWeek = firstDay.getDay()
+
+    const dailyCompletions: { [key: string]: number } = {}
+
+    console.log('📅 Processando calendário para:', year, month + 1)
+    console.log('📅 Total de entries no histórico:', completionHistory.length)
+
+    // Contar quantas tarefas foram completadas em cada dia
+    completionHistory.forEach(item => {
+      const date = new Date(item.completed_date)
+      console.log('📅 Processando item:', item.completed_date, 'xp:', item.xp_earned)
+      if (date.getFullYear() === year && date.getMonth() === month) {
+        const dateStr = date.toISOString().split('T')[0]
+        // Incrementar contador (cada item é uma tarefa completada)
+        dailyCompletions[dateStr] = (dailyCompletions[dateStr] || 0) + 1
+        console.log('✅ Incrementado no calendário:', dateStr, '=', dailyCompletions[dateStr])
+      }
+    })
+
+    console.log('📅 Daily completions:', dailyCompletions)
+
+    const days: (null | { day: number; date: Date; completions: number; isToday: boolean })[] = []
+
+    // Adicionar espaços vazios
+    for (let i = 0; i < startingDayOfWeek; i++) {
+      days.push(null)
+    }
+
+    // Adicionar dias do mês
+    const today = new Date()
+    for (let day = 1; day <= daysInMonth; day++) {
+      const dayDate = new Date(year, month, day)
+      const dateStr = dayDate.toISOString().split('T')[0]
+      const completions = dailyCompletions[dateStr] || 0
+      const isToday = 
+        day === today.getDate() && 
+        month === today.getMonth() && 
+        year === today.getFullYear()
+      
+      days.push({ day, date: dayDate, completions, isToday })
+    }
+
+    return days
+  }, [completionHistory, currentMonth])
 
   const handleSave = () => {
     onUpdateUser({ ...userData, ...formData })
@@ -79,29 +195,12 @@ export function UserProfileModal({
   const completedToday = completedHabits.size
   const completionRate = totalHabits > 0 ? (completedToday / totalHabits) * 100 : 0
   const totalXPEarned = habits.reduce((sum, habit) => sum + (completedHabits.has(habit.id) ? habit.xp : 0), 0)
-  const averageStreak = habits.length > 0 ? habits.reduce((sum, habit) => sum + habit.streak, 0) / habits.length : 0
-  const longestStreak = Math.max(...habits.map((h) => h.streak), 0)
+  const longestStreak = Math.max(...habits.map((h) => h.streak || 0), 0)
   const unlockedAchievements = achievements.filter((a) => a.unlocked).length
 
-  // Mock historical data for charts
-  const weeklyProgress = [
-    { day: "Dom", completed: 3, total: 4 },
-    { day: "Seg", completed: 4, total: 4 },
-    { day: "Ter", completed: 2, total: 4 },
-    { day: "Qua", completed: 4, total: 4 },
-    { day: "Qui", completed: 3, total: 4 },
-    { day: "Sex", completed: 4, total: 4 },
-    { day: "Sáb", completed: 2, total: 4 },
-  ]
-
-  const monthlyXP = [
-    { month: "Jan", xp: 450 },
-    { month: "Fev", xp: 520 },
-    { month: "Mar", xp: 680 },
-    { month: "Abr", xp: 750 },
-    { month: "Mai", xp: 890 },
-    { month: "Jun", xp: 920 },
-  ]
+  const monthlyXP = getMonthlyXP()
+  const calendarDays = getCalendarData()
+  const monthName = currentMonth.toLocaleDateString("pt-BR", { month: "long", year: "numeric" })
 
   const exportData = () => {
     const data = {
@@ -138,10 +237,9 @@ export function UserProfileModal({
         </DialogHeader>
 
         <Tabs defaultValue="overview" className="w-full">
-          <TabsList className="grid w-full grid-cols-4 glass">
+          <TabsList className="grid w-full grid-cols-3 glass">
             <TabsTrigger value="overview">Visão Geral</TabsTrigger>
             <TabsTrigger value="progress">Progresso</TabsTrigger>
-            <TabsTrigger value="achievements">Conquistas</TabsTrigger>
             <TabsTrigger value="settings">Configurações</TabsTrigger>
           </TabsList>
 
@@ -161,9 +259,18 @@ export function UserProfileModal({
                         <Crown className="w-3 h-3 mr-1" />
                         Nível {userData.level}
                       </Badge>
-                      <StreakCounter streak={userData.streak} size="md" />
+                      <Badge variant="outline" className="flex items-center gap-1">
+                        <Flame className="w-3 h-3 text-orange-500" />
+                        {userData.streak} dias
+                      </Badge>
                     </div>
-                    <XPBar currentXP={userData.xp} maxXP={userData.xpToNext} level={userData.level} animated={false} />
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="text-muted-foreground">Nível {userData.level}</span>
+                        <span className="text-muted-foreground">{userData.xp}/{userData.xpToNext} XP</span>
+                      </div>
+                      <Progress value={(userData.xp / userData.xpToNext) * 100} className="h-2" />
+                    </div>
                   </div>
                 </div>
               </CardContent>
@@ -188,7 +295,7 @@ export function UserProfileModal({
                   <div className="flex items-center justify-center w-10 h-10 mx-auto mb-2 rounded-full bg-yellow-500/20">
                     <Star className="w-5 h-5 text-yellow-500" />
                   </div>
-                  <div className="text-2xl font-bold">{totalXPEarned}</div>
+                  <div className="text-2xl font-bold">{totalXPEarned || 0}</div>
                   <div className="text-sm text-muted-foreground">XP Hoje</div>
                 </CardContent>
               </Card>
@@ -198,7 +305,7 @@ export function UserProfileModal({
                   <div className="flex items-center justify-center w-10 h-10 mx-auto mb-2 rounded-full bg-orange-500/20">
                     <Flame className="w-5 h-5 text-orange-500" />
                   </div>
-                  <div className="text-2xl font-bold">{longestStreak}</div>
+                  <div className="text-2xl font-bold">{longestStreak || 0}</div>
                   <div className="text-sm text-muted-foreground">Maior Sequência</div>
                 </CardContent>
               </Card>
@@ -257,141 +364,118 @@ export function UserProfileModal({
           </TabsContent>
 
           <TabsContent value="progress" className="space-y-6">
-            {/* Weekly Progress Chart */}
-            <Card className="glass">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <BarChart3 className="w-5 h-5" />
-                  Progresso Semanal
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {weeklyProgress.map((day, index) => (
-                    <div key={day.day} className="flex items-center gap-4">
-                      <div className="w-8 text-sm font-medium">{day.day}</div>
-                      <div className="flex-1">
-                        <Progress value={(day.completed / day.total) * 100} className="h-3" />
-                      </div>
-                      <div className="text-sm text-muted-foreground">
-                        {day.completed}/{day.total}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Monthly XP Chart */}
-            <Card className="glass">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Zap className="w-5 h-5" />
-                  XP Mensal
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {monthlyXP.map((month, index) => (
-                    <div key={month.month} className="flex items-center gap-4">
-                      <div className="w-8 text-sm font-medium">{month.month}</div>
-                      <div className="flex-1">
-                        <Progress value={(month.xp / 1000) * 100} className="h-3" />
-                      </div>
-                      <div className="text-sm font-medium text-primary">{month.xp} XP</div>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Calendar View */}
-            <Card className="glass">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Calendar className="w-5 h-5" />
-                  Calendário de Atividades
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-7 gap-2 mb-4">
-                  {["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"].map((day) => (
-                    <div key={day} className="text-center text-sm font-medium text-muted-foreground p-2">
-                      {day}
-                    </div>
-                  ))}
-                </div>
-                <div className="grid grid-cols-7 gap-2">
-                  {Array.from({ length: 35 }, (_, i) => {
-                    const intensity = Math.random()
-                    return (
-                      <div
-                        key={i}
-                        className={`aspect-square rounded-sm border ${
-                          intensity > 0.7
-                            ? "bg-green-500"
-                            : intensity > 0.4
-                              ? "bg-green-400"
-                              : intensity > 0.2
-                                ? "bg-green-300"
-                                : "bg-muted"
-                        }`}
-                        title={`${Math.floor(intensity * 4)} hábitos completados`}
-                      />
-                    )
-                  })}
-                </div>
-                <div className="flex items-center justify-between mt-4 text-sm text-muted-foreground">
-                  <span>Menos</span>
-                  <div className="flex gap-1">
-                    <div className="w-3 h-3 rounded-sm bg-muted" />
-                    <div className="w-3 h-3 rounded-sm bg-green-300" />
-                    <div className="w-3 h-3 rounded-sm bg-green-400" />
-                    <div className="w-3 h-3 rounded-sm bg-green-500" />
-                  </div>
-                  <span>Mais</span>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="achievements" className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {achievements.map((achievement) => (
-                <Card
-                  key={achievement.id}
-                  className={`glass transition-all hover:scale-105 ${
-                    achievement.unlocked
-                      ? "bg-gradient-to-r from-yellow-500/10 to-orange-500/10 border-yellow-500/20"
-                      : "opacity-60"
-                  }`}
-                >
-                  <CardContent className="p-4">
-                    <div className="flex items-center gap-4">
-                      <div className="text-4xl">{achievement.icon}</div>
-                      <div className="flex-1">
-                        <h3 className="font-bold">{achievement.name}</h3>
-                        <p className="text-sm text-muted-foreground">{achievement.description}</p>
-                        <div className="flex items-center gap-2 mt-2">
-                          <Badge
-                            variant={achievement.unlocked ? "default" : "secondary"}
-                            className={achievement.unlocked ? "bg-gradient-to-r from-yellow-400 to-orange-500" : ""}
-                          >
-                            {achievement.unlocked ? "Desbloqueada" : "Bloqueada"}
-                          </Badge>
-                          {achievement.rarity && (
-                            <Badge variant="outline" className="capitalize">
-                              {achievement.rarity}
-                            </Badge>
-                          )}
-                        </div>
-                      </div>
-                      {achievement.unlocked && <Medal className="w-6 h-6 text-yellow-500" />}
+            {isLoadingHistory ? (
+              <div className="flex items-center justify-center py-12">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+              </div>
+            ) : (
+              <>
+                {/* Monthly XP Chart */}
+                <Card className="glass">
+                  <CardHeader>
+                    <CardTitle className="text-base">XP MENSAL</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-3">
+                      {monthlyXP.map((data) => {
+                        const maxXP = Math.max(...monthlyXP.map(m => m.xp), 1)
+                        const percentage = (data.xp / maxXP) * 100
+                        
+                        return (
+                          <div key={data.month} className="flex items-center gap-4">
+                            <div className="w-8 text-sm font-medium">{data.month}</div>
+                            <div className="flex-1">
+                              <Progress value={percentage} className="h-2 bg-muted">
+                                <div className="h-full bg-green-500 transition-all" />
+                              </Progress>
+                            </div>
+                            <div className="text-sm font-medium text-green-500">{data.xp} XP</div>
+                          </div>
+                        )
+                      })}
                     </div>
                   </CardContent>
                 </Card>
-              ))}
-            </div>
+
+                {/* Calendar View */}
+                <Card className="glass">
+                  <CardHeader>
+                    <div className="flex items-center justify-between">
+                      <CardTitle className="text-base capitalize">{monthName}</CardTitle>
+                      <div className="flex items-center gap-2">
+                        <button 
+                          className="p-1 hover:bg-muted rounded transition-colors"
+                          onClick={() => setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1, 1))}
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <polyline points="15 18 9 12 15 6"></polyline>
+                          </svg>
+                        </button>
+                        <button 
+                          className="p-1 hover:bg-muted rounded transition-colors"
+                          onClick={() => setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 1))}
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <polyline points="9 18 15 12 9 6"></polyline>
+                          </svg>
+                        </button>
+                      </div>
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid grid-cols-7 gap-2 mb-4">
+                      {["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"].map((day) => (
+                        <div key={day} className="text-center text-xs font-medium text-muted-foreground p-2">
+                          {day}
+                        </div>
+                      ))}
+                    </div>
+                    <div className="grid grid-cols-7 gap-2">
+                      {calendarDays.map((dayData, i) => {
+                        if (!dayData) {
+                          return <div key={`empty-${i}`} />
+                        }
+
+                        const { day, completions, isToday } = dayData
+                        
+                        // Definir cor baseada na contagem (0, 1, 2, 3+)
+                        let bgColor = "#2B3137" // 0 tarefas
+                        if (completions === 1) bgColor = "#026615" // 1 tarefa
+                        else if (completions === 2) bgColor = "#2DBA4E" // 2 tarefas
+                        else if (completions >= 3) bgColor = "#5ED364" // 3+ tarefas
+
+                        return (
+                          <div
+                            key={i}
+                            className={`aspect-square rounded-md flex items-center justify-center text-xs font-medium transition-all ${
+                              isToday ? "ring-2 ring-blue-500 ring-offset-1 ring-offset-background" : ""
+                            }`}
+                            style={{ backgroundColor: bgColor }}
+                            title={`${day} - ${completions} tarefa${completions !== 1 ? 's' : ''} completada${completions !== 1 ? 's' : ''}`}
+                          >
+                            <span className={completions > 0 ? "text-white" : "text-muted-foreground"}>
+                              {day}
+                            </span>
+                          </div>
+                        )
+                      })}
+                    </div>
+                    
+                    {/* Legenda */}
+                    <div className="flex items-center gap-4 mt-4 text-xs text-muted-foreground">
+                      <span>Menos</span>
+                      <div className="flex gap-1">
+                        <div className="w-4 h-4 rounded" style={{ backgroundColor: "#2B3137" }} title="0 tarefas" />
+                        <div className="w-4 h-4 rounded" style={{ backgroundColor: "#026615" }} title="1 tarefa" />
+                        <div className="w-4 h-4 rounded" style={{ backgroundColor: "#2DBA4E" }} title="2 tarefas" />
+                        <div className="w-4 h-4 rounded" style={{ backgroundColor: "#5ED364" }} title="3+ tarefas" />
+                      </div>
+                      <span>Mais</span>
+                    </div>
+                  </CardContent>
+                </Card>
+              </>
+            )}
           </TabsContent>
 
           <TabsContent value="settings" className="space-y-6">
@@ -486,8 +570,8 @@ export function UserProfileModal({
                           <span className="ml-2 font-medium">{userData.xp}</span>
                         </div>
                         <div>
-                          <span className="text-muted-foreground">Sequência Média:</span>
-                          <span className="ml-2 font-medium">{averageStreak.toFixed(1)} dias</span>
+                          <span className="text-muted-foreground">Sequência Atual:</span>
+                          <span className="ml-2 font-medium">{userData.streak} dias</span>
                         </div>
                         <div>
                           <span className="text-muted-foreground">Moedas:</span>

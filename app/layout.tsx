@@ -10,9 +10,18 @@ import { Suspense } from "react"
 import "./globals.css"
 
 export const metadata: Metadata = {
-  title: "HabitFlow - Gamified Habit Tracker",
-  description: "Transform your habits into an engaging game with HabitFlow",
+  title: "DailyQuest - Gamified Habit Tracker",
+  description: "Transform your habits into an engaging game with DailyQuest",
   generator: "v0.app",
+  icons: {
+    icon: [
+      { url: '/icon.svg', type: 'image/svg+xml' },
+    ],
+    apple: [
+      { url: '/logo.svg', type: 'image/svg+xml' },
+    ],
+  },
+  manifest: '/manifest.json',
 }
 
 export default function RootLayout({

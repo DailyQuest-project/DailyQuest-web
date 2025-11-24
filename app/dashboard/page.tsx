@@ -15,6 +15,7 @@ import { CreateHabitModal } from "@/components/create-habit-modal"
 import { EditTaskModal } from "@/components/edit-task-modal"
 import { TagManagerModal } from "@/components/tag-manager-modal"
 import { UserProfileModal } from "@/components/user-profile-modal"
+import { AchievementsModal } from "@/components/achievements-modal"
 import { HabitFilters, type FilterState } from "@/components/habit-filters"
 import { ThemeToggle } from "@/components/theme-toggle"
 import { MobileNav } from "@/components/mobile-nav"
@@ -127,6 +128,7 @@ function DashboardContent() {
   const [editingTask, setEditingTask] = useState<Task | null>(null)
   const [editModalOpen, setEditModalOpen] = useState(false)
   const [tagManagerOpen, setTagManagerOpen] = useState(false)
+  const [achievementsModalOpen, setAchievementsModalOpen] = useState(false)
   
   // Estados do calendário
   const [currentCalendarDate, setCurrentCalendarDate] = useState(new Date())
@@ -134,6 +136,24 @@ function DashboardContent() {
   const [calendarDays, setCalendarDays] = useState<(CalendarDay | null)[]>([])
   
   // Estados de achievements
+  const [userAchievements, setUserAchievements] = useState<any[]>([])
+
+  // Buscar conquistas do usuário
+  useEffect(() => {
+    const fetchAchievements = async () => {
+      try {
+        const { achievementService } = await import('@/lib/api-service-complete')
+        const data = await achievementService.getMyAchievements()
+        console.log('🏆 Conquistas carregadas:', data)
+        setUserAchievements(Array.isArray(data) ? data : [])
+      } catch (error) {
+        console.error('Erro ao buscar conquistas:', error)
+        setUserAchievements([])
+      }
+    }
+    fetchAchievements()
+  }, [])
+
   const [achievements, setAchievements] = useState<any[]>([
     {
       id: 1,
@@ -556,6 +576,12 @@ function DashboardContent() {
           setEditingTask(null)
         }}
         onUpdate={handleUpdateTask}
+      />
+
+      {/* Modal de Conquistas */}
+      <AchievementsModal 
+        open={achievementsModalOpen} 
+        onOpenChange={setAchievementsModalOpen} 
       />
 
       {/* Modal de Gerenciamento de Tags */}
@@ -1067,21 +1093,64 @@ function DashboardContent() {
             {/* Achievements Card */}
             <Card className="glass">
               <CardHeader className="pb-4">
-                <CardTitle className="flex items-center gap-2 text-base">
-                  <Trophy className="w-5 h-5 text-yellow-500" />
-                  Conquistas
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <div className="p-3 rounded-lg border bg-primary/10 border-primary/20">
-                  <div className="flex items-center gap-3">
-                    <div className="text-xl">🏆</div>
-                    <div className="min-w-0 flex-1">
-                      <div className="font-medium text-sm">Iniciante</div>
-                      <div className="text-xs text-foreground/70">Complete seu primeiro hábito</div>
-                    </div>
-                  </div>
+                <div className="flex items-center justify-between">
+                  <CardTitle className="flex items-center gap-2 text-base">
+                    <Trophy className="w-5 h-5 text-yellow-500" />
+                    Conquistas
+                  </CardTitle>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setAchievementsModalOpen(true)}
+                    className="text-xs text-primary hover:text-primary/80"
+                  >
+                    Ver Todas
+                  </Button>
                 </div>
+              </CardHeader>
+              <CardContent>
+                {userAchievements.length === 0 ? (
+                  <div className="text-center py-6 text-muted-foreground">
+                    <Trophy className="w-10 h-10 mx-auto mb-2 opacity-30" />
+                    <p className="text-xs">Nenhuma conquista ainda</p>
+                    <p className="text-[10px] mt-1">Complete tarefas para desbloquear!</p>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    {userAchievements.slice(0, 3).map((item: any) => {
+                      const ach = item.achievement
+                      return (
+                        <div
+                          key={ach.id}
+                          className="p-3 rounded-lg border bg-gradient-to-br from-yellow-500/10 to-orange-500/10 border-yellow-500/30 hover:border-yellow-500/50 transition-all group cursor-pointer"
+                          onClick={() => setAchievementsModalOpen(true)}
+                        >
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 flex items-center justify-center rounded-full bg-yellow-500/20 text-xl group-hover:scale-110 transition-transform">
+                              {ach.icon}
+                            </div>
+                            <div className="min-w-0 flex-1">
+                              <div className="font-semibold text-sm text-foreground">
+                                {ach.name}
+                              </div>
+                              <div className="text-xs text-muted-foreground line-clamp-1">
+                                {ach.description}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      )
+                    })}
+                    {userAchievements.length > 3 && (
+                      <button
+                        onClick={() => setAchievementsModalOpen(true)}
+                        className="w-full text-center py-2 text-xs text-primary hover:text-primary/80 hover:bg-primary/5 rounded transition-colors"
+                      >
+                        + {userAchievements.length - 3} conquista{userAchievements.length - 3 > 1 ? 's' : ''}
+                      </button>
+                    )}
+                  </div>
+                )}
               </CardContent>
             </Card>
           </div>

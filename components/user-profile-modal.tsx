@@ -14,6 +14,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Progress } from "@/components/ui/progress"
 import { XPBar } from "@/components/xp-bar"
 import { StreakCounter } from "@/components/streak-counter"
+import { AchievementsModal } from "@/components/achievements-modal"
 import {
   User,
   Trophy,
@@ -81,6 +82,10 @@ export function UserProfileModal({
   const [completionHistory, setCompletionHistory] = useState<any[]>([])
   const [currentMonth, setCurrentMonth] = useState(new Date())
   const [isLoadingHistory, setIsLoadingHistory] = useState(false)
+  
+  // Estado para modal de conquistas
+  const [achievementsModalOpen, setAchievementsModalOpen] = useState(false)
+  const [userAchievements, setUserAchievements] = useState<any[]>([])
 
   // Buscar histórico de completions
   const fetchCompletionHistory = useCallback(async () => {
@@ -106,8 +111,22 @@ export function UserProfileModal({
   useEffect(() => {
     if (open) {
       fetchCompletionHistory()
+      fetchUserAchievements()
     }
   }, [open, fetchCompletionHistory])
+
+  // Buscar conquistas do usuário
+  const fetchUserAchievements = async () => {
+    try {
+      const { achievementService } = await import('@/lib/api-service-complete')
+      const data = await achievementService.getMyAchievements()
+      console.log('🏆 Conquistas do usuário:', data)
+      setUserAchievements(Array.isArray(data) ? data : [])
+    } catch (error) {
+      console.error('Erro ao buscar conquistas:', error)
+      setUserAchievements([])
+    }
+  }
 
   // Calcular XP por mês baseado no histórico
   const getMonthlyXP = useCallback(() => {
@@ -322,6 +341,57 @@ export function UserProfileModal({
                 </CardContent>
               </Card>
             </div>
+
+            {/* Conquistas Recentes */}
+            <Card className="glass">
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <CardTitle className="flex items-center gap-2">
+                    <Trophy className="w-5 h-5 text-yellow-500" />
+                    Conquistas Desbloqueadas
+                  </CardTitle>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setAchievementsModalOpen(true)}
+                    className="text-primary hover:text-primary/80"
+                  >
+                    Ver Mais
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent>
+                {userAchievements.length === 0 ? (
+                  <div className="text-center py-8 text-muted-foreground">
+                    <Trophy className="w-12 h-12 mx-auto mb-3 opacity-50" />
+                    <p>Nenhuma conquista desbloqueada ainda.</p>
+                    <p className="text-sm mt-2">Complete tarefas para ganhar conquistas!</p>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    {userAchievements.slice(0, 4).map((item: any) => {
+                      const ach = item.achievement
+                      return (
+                        <div
+                          key={ach.id}
+                          className="flex flex-col items-center gap-2 p-3 rounded-lg bg-muted/50 hover:bg-muted transition-colors"
+                        >
+                          <div className="w-12 h-12 flex items-center justify-center rounded-full bg-yellow-500/20 text-2xl">
+                            {ach.icon}
+                          </div>
+                          <p className="text-sm font-medium text-center line-clamp-2">
+                            {ach.name}
+                          </p>
+                          <Badge variant="outline" className="text-xs">
+                            {ach.category}
+                          </Badge>
+                        </div>
+                      )
+                    })}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
 
             {/* Habit Breakdown */}
             <Card className="glass">
@@ -586,6 +656,12 @@ export function UserProfileModal({
           </TabsContent>
         </Tabs>
       </DialogContent>
+
+      {/* Modal de Conquistas */}
+      <AchievementsModal 
+        open={achievementsModalOpen} 
+        onOpenChange={setAchievementsModalOpen} 
+      />
     </Dialog>
   )
 }

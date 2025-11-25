@@ -1,0 +1,126 @@
+{
+  "config": {
+    "typing_speed": 0.1,
+    "default_delay": 2.0,
+    "timeout": 15
+  },
+  "user": {
+    "username": "testuser",
+    "email": "testuser@dailyquest.com",
+    "password": "testpass123"
+  },
+  "tasks": [
+    {
+      "title": "Completar trabalho de matemática",
+      "description": "Resolver exercícios do capítulo 5",
+      "difficulty": "MEDIUM"
+    },
+    {
+      "title": "Estudar para prova de história",
+      "description": "Revisar capítulos 1-3",
+      "difficulty": "HARD"
+    },
+    {
+      "title": "Fazer compras no mercado",
+      "description": "Lista: arroz, feijão, frutas",
+      "difficulty": "EASY"
+    }
+  ],
+  "habits": [
+    {
+      "name": "Estudar 1 hora por dia",
+      "difficulty": "MEDIUM"
+    },
+    {
+      "name": "Fazer exercícios físicos",
+      "difficulty": "EASY"
+    }
+  ],
+  "expected_achievements": [
+    "FIRST_LOGIN",
+    "FIRST_TODO",
+    "TASK_COMPLETE_5",
+    "LEVEL_UP"
+  ],
+  "test_flow": {
+    "steps": [
+      {
+        "action": "login",
+        "description": "Realizar login com usuário de teste"
+      },
+      {
+        "action": "verify_dashboard",
+        "description": "Verificar dashboard carregado"
+      },
+      {
+        "action": "create_habit",
+        "description": "Criar primeiro hábito de exemplo"
+      },
+      {
+        "action": "create_habit",
+        "description": "Criar segundo hábito de exemplo"
+      },
+      {
+        "action": "create_todo",
+        "description": "Criar um afazer (ToDo) de exemplo"
+      },
+      {
+        "action": "complete_2_habits",
+        "description": "Completar 2 hábitos"
+      },
+      {
+        "action": "uncomplete_habit",
+        "description": "Descompletar 1 hábito (deixar apenas 1 completo)"
+      },
+      {
+        "action": "switch_to_todos",
+        "description": "Alternar para aba de Afazeres"
+      },
+      {
+        "action": "use_filter",
+        "description": "Usar filtro de tarefas",
+        "filter_name": "Todas"
+      },
+      {
+        "action": "scroll_dashboard",
+        "description": "Navegar pelo dashboard"
+      },
+      {
+        "action": "open_achievements",
+        "description": "Abrir modal de conquistas"
+      },
+      {
+        "action": "scroll_achievements",
+        "description": "Visualizar conquistas"
+      },
+      {
+        "action": "close_achievements",
+        "description": "Fechar modal de conquistas"
+      },
+      {
+        "action": "open_profile",
+        "description": "Abrir perfil do usuário"
+      },
+      {
+        "action": "view_profile",
+        "description": "Visualizar informações do perfil"
+      },
+      {
+        "action": "calendar_next",
+        "description": "Avançar mês no calendário"
+      },
+      {
+        "action": "calendar_previous",
+        "description": "Voltar mês no calendário"
+      },
+      {
+        "action": "close_profile",
+        "description": "Fechar modal de perfil"
+      },
+      {
+        "action": "final_scroll",
+        "description": "Scroll final no dashboard"
+      }
+    ]
+  }
+}

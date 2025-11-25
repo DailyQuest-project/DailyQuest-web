@@ -1,0 +1,21 @@
+# Docker Compose para PRODUÇÃO
+# USO: docker-compose -f docker-compose.prod.yml up -d
+
+services:
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.production
+    environment:
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:?Defina NEXT_PUBLIC_API_URL no .env}
+      NEXT_PUBLIC_AUTH_URL: ${NEXT_PUBLIC_AUTH_URL:?Defina NEXT_PUBLIC_AUTH_URL no .env}
+      NODE_ENV: production
+    networks:
+      - dailyquest-net-prod
+    restart: unless-stopped
+    # Não expor porta diretamente - usar nginx como reverse proxy
+
+networks:
+  dailyquest-net-prod:
+    external: true
+    name: dailyquest-net-prod

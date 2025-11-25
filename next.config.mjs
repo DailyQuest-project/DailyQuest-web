@@ -1,20 +1,34 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   typescript: {
-    ignoreBuildErrors: true,
+    ignoreBuildErrors: true, // TODO: Corrigir erros de TypeScript
   },
   images: {
     unoptimized: true,
+    domains: ['dailyquest-api.onrender.com'], // Adicionar domínio do backend
   },
-  output: 'standalone',
-  // Configuração para permitir requisições ao backend
-  async rewrites() {
+  // Remover output: 'standalone' para deploy na Vercel
+  // A Vercel usa seu próprio sistema de build
+  
+  // Headers de segurança
+  async headers() {
     return [
       {
-        source: '/api/:path*',
-        destination: process.env.NEXT_PUBLIC_API_URL 
-          ? `${process.env.NEXT_PUBLIC_API_URL}/:path*`
-          : 'http://localhost:8000/api/v1/:path*',
+        source: '/(.*)',
+        headers: [
+          {
+            key: 'X-Frame-Options',
+            value: 'DENY',
+          },
+          {
+            key: 'X-Content-Type-Options',
+            value: 'nosniff',
+          },
+          {
+            key: 'Referrer-Policy',
+            value: 'origin-when-cross-origin',
+          },
+        ],
       },
     ]
   },

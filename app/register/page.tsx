@@ -145,14 +145,14 @@ function RegisterPageContent() {
               )}
             <div className="space-y-2">
               <Label htmlFor="name" className="text-foreground">
-                Nome completo
+                Nickname
               </Label>
               <div className="relative">
                 <User className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
                   id="name"
                   type="text"
-                  placeholder="Seu nome"
+                  placeholder="Seu nick"
                   value={formData.name}
                   onChange={(e) => updateFormData("name", e.target.value)}
                   required

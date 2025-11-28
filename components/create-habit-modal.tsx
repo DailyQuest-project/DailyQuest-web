@@ -145,43 +145,43 @@ export function CreateHabitModal({ onCreateHabit, children, availableTags = [], 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>{children}</DialogTrigger>
-      <DialogContent className="glass-strong max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="glass-strong max-w-2xl max-h-[90vh] overflow-y-auto p-4 sm:p-6 w-[95vw] sm:w-auto">
         <DialogHeader>
-          <DialogTitle className="text-xl font-bold">Criar Novo Hábito</DialogTitle>
+          <DialogTitle className="text-lg sm:text-xl font-bold">Criar Novo Hábito</DialogTitle>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
           {/* Basic Info */}
-          <div className="space-y-4">
+          <div className="space-y-3 sm:space-y-4">
             <div>
-              <Label htmlFor="title">Título *</Label>
+              <Label htmlFor="title" className="text-xs sm:text-sm">Título *</Label>
               <Input
                 id="title"
                 value={formData.title}
                 onChange={(e) => setFormData((prev) => ({ ...prev, title: e.target.value }))}
                 placeholder="Ex: Meditar 10 minutos"
-                className="glass bg-transparent"
+                className="glass bg-transparent text-sm h-9 sm:h-10"
                 required
               />
             </div>
 
             <div>
-              <Label htmlFor="description">Descrição</Label>
+              <Label htmlFor="description" className="text-xs sm:text-sm">Descrição</Label>
               <Textarea
                 id="description"
                 value={formData.description}
                 onChange={(e) => setFormData((prev) => ({ ...prev, description: e.target.value }))}
                 placeholder="Descreva seu hábito..."
-                className="glass bg-transparent resize-none"
-                rows={3}
+                className="glass bg-transparent resize-none text-sm"
+                rows={2}
               />
             </div>
           </div>
 
           {/* Type Selection */}
           <div>
-            <Label>Tipo de Atividade</Label>
-            <div className="grid grid-cols-2 gap-3 mt-2">
+            <Label className="text-xs sm:text-sm">Tipo de Atividade</Label>
+            <div className="grid grid-cols-2 gap-2 sm:gap-3 mt-2">
               {habitTypes.map((type) => {
                 const Icon = type.icon
                 return (
@@ -192,10 +192,10 @@ export function CreateHabitModal({ onCreateHabit, children, availableTags = [], 
                     }`}
                     onClick={() => setFormData((prev) => ({ ...prev, type: type.value }))}
                   >
-                    <CardContent className="p-4 text-center">
-                      <Icon className="w-6 h-6 mx-auto mb-2 text-primary" />
-                      <div className="font-medium text-sm">{type.label}</div>
-                      <div className="text-xs text-muted-foreground mt-1">{type.description}</div>
+                    <CardContent className="p-3 sm:p-4 text-center">
+                      <Icon className="w-5 h-5 sm:w-6 sm:h-6 mx-auto mb-1 sm:mb-2 text-primary" />
+                      <div className="font-medium text-xs sm:text-sm">{type.label}</div>
+                      <div className="text-[10px] sm:text-xs text-muted-foreground mt-0.5 sm:mt-1 line-clamp-2">{type.description}</div>
                     </CardContent>
                   </Card>
                 )
@@ -206,8 +206,8 @@ export function CreateHabitModal({ onCreateHabit, children, availableTags = [], 
           {formData.type === "habit" && (
             <>
               <div>
-                <Label>Frequência Desejada</Label>
-                <div className="grid grid-cols-2 gap-3 mt-2">
+                <Label className="text-xs sm:text-sm">Frequência Desejada</Label>
+                <div className="grid grid-cols-2 gap-2 sm:gap-3 mt-2">
                   {frequencyOptions.map((frequency) => (
                     <Card
                       key={frequency.value}
@@ -218,9 +218,9 @@ export function CreateHabitModal({ onCreateHabit, children, availableTags = [], 
                       }`}
                       onClick={() => setFormData((prev) => ({ ...prev, frequency: frequency.value }))}
                     >
-                      <CardContent className="p-3 text-center">
-                        <div className="font-medium text-sm">{frequency.label}</div>
-                        <div className="text-xs text-muted-foreground mt-1">{frequency.description}</div>
+                      <CardContent className="p-2 sm:p-3 text-center">
+                        <div className="font-medium text-xs sm:text-sm">{frequency.label}</div>
+                        <div className="text-[10px] sm:text-xs text-muted-foreground mt-0.5 sm:mt-1 line-clamp-2">{frequency.description}</div>
                       </CardContent>
                     </Card>
                   ))}
@@ -229,7 +229,7 @@ export function CreateHabitModal({ onCreateHabit, children, availableTags = [], 
 
               {formData.frequency === "WEEKLY_TIMES" && (
                 <div>
-                  <Label htmlFor="frequency_target_times">Quantas vezes por semana? *</Label>
+                  <Label htmlFor="frequency_target_times" className="text-xs sm:text-sm">Quantas vezes por semana? *</Label>
                   <Input
                     id="frequency_target_times"
                     type="number"
@@ -240,9 +240,9 @@ export function CreateHabitModal({ onCreateHabit, children, availableTags = [], 
                       ...prev, 
                       frequency_target_times: parseInt(e.target.value) || 1 
                     }))}
-                    className="glass"
+                    className="glass text-sm h-9 sm:h-10"
                   />
-                  <p className="text-xs text-muted-foreground mt-1">
+                  <p className="text-[10px] sm:text-xs text-muted-foreground mt-1">
                     De 1 a 7 vezes na semana
                   </p>
                 </div>
@@ -250,16 +250,16 @@ export function CreateHabitModal({ onCreateHabit, children, availableTags = [], 
 
               {formData.frequency === "SPECIFIC_DAYS" && (
                 <div>
-                  <Label>Dias da semana *</Label>
-                  <div className="grid grid-cols-7 gap-2 mt-2">
+                  <Label className="text-xs sm:text-sm">Dias da semana *</Label>
+                  <div className="grid grid-cols-7 gap-1 sm:gap-2 mt-2">
                     {[
-                      { day: 0, label: "S" },
-                      { day: 1, label: "T" },
-                      { day: 2, label: "Q" },
+                      { day: 0, label: "D" },
+                      { day: 1, label: "S" },
+                      { day: 2, label: "T" },
                       { day: 3, label: "Q" },
-                      { day: 4, label: "S" },
+                      { day: 4, label: "Q" },
                       { day: 5, label: "S" },
-                      { day: 6, label: "D" }
+                      { day: 6, label: "S" }
                     ].map(({ day, label }) => (
                       <button
                         key={day}
@@ -272,7 +272,7 @@ export function CreateHabitModal({ onCreateHabit, children, availableTags = [], 
                               : [...prev.frequency_days, day].sort()
                           }));
                         }}
-                        className={`h-10 rounded-lg font-medium text-sm transition-all ${
+                        className={`h-8 sm:h-10 rounded-lg font-medium text-xs sm:text-sm transition-all ${
                           formData.frequency_days.includes(day)
                             ? "bg-primary text-primary-foreground"
                             : "glass hover:bg-card/90"
@@ -282,7 +282,7 @@ export function CreateHabitModal({ onCreateHabit, children, availableTags = [], 
                       </button>
                     ))}
                   </div>
-                  <p className="text-xs text-muted-foreground mt-1">
+                  <p className="text-[10px] sm:text-xs text-muted-foreground mt-1">
                     Selecione os dias que deseja realizar o hábito
                   </p>
                 </div>
@@ -292,14 +292,14 @@ export function CreateHabitModal({ onCreateHabit, children, availableTags = [], 
 
           {formData.type === "todo" && (
             <div>
-              <Label htmlFor="deadline">Deadline *</Label>
+              <Label htmlFor="deadline" className="text-xs sm:text-sm">Deadline *</Label>
               <Input
                 id="deadline"
                 type="date"
                 value={formData.deadline}
                 min={today}
                 onChange={(e) => setFormData((prev) => ({ ...prev, deadline: e.target.value }))}
-                className="glass bg-transparent"
+                className="glass bg-transparent text-sm h-9 sm:h-10"
                 required
               />
             </div>
@@ -307,8 +307,8 @@ export function CreateHabitModal({ onCreateHabit, children, availableTags = [], 
 
           {/* Difficulty Selection */}
           <div>
-            <Label>Dificuldade</Label>
-            <div className="grid grid-cols-3 gap-3 mt-2">
+            <Label className="text-xs sm:text-sm">Dificuldade</Label>
+            <div className="grid grid-cols-3 gap-2 sm:gap-3 mt-2">
               {difficultyOptions.map((difficulty) => (
                 <Card
                   key={difficulty.value}
@@ -319,13 +319,13 @@ export function CreateHabitModal({ onCreateHabit, children, availableTags = [], 
                   }`}
                   onClick={() => setFormData((prev) => ({ ...prev, difficulty: difficulty.value }))}
                 >
-                  <CardContent className="p-4 text-center">
-                    <div className={`w-4 h-4 rounded-full ${difficulty.color} mx-auto mb-2`} />
-                    <div className="font-medium text-sm">{difficulty.label}</div>
-                    <div className="text-xs text-muted-foreground">{difficulty.description}</div>
-                    <div className="flex items-center justify-center gap-1 mt-2 text-primary">
-                      <Star className="w-3 h-3" />
-                      <span className="text-xs font-medium">+{difficulty.xp} XP</span>
+                  <CardContent className="p-2 sm:p-4 text-center">
+                    <div className={`w-3 h-3 sm:w-4 sm:h-4 rounded-full ${difficulty.color} mx-auto mb-1 sm:mb-2`} />
+                    <div className="font-medium text-xs sm:text-sm">{difficulty.label}</div>
+                    <div className="text-[10px] sm:text-xs text-muted-foreground hidden sm:block">{difficulty.description}</div>
+                    <div className="flex items-center justify-center gap-0.5 sm:gap-1 mt-1 sm:mt-2 text-primary">
+                      <Star className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
+                      <span className="text-[10px] sm:text-xs font-medium">+{difficulty.xp} XP</span>
                     </div>
                   </CardContent>
                 </Card>
@@ -344,12 +344,12 @@ export function CreateHabitModal({ onCreateHabit, children, availableTags = [], 
 
           {/* Preview */}
           <Card className="glass bg-primary/5">
-            <CardContent className="p-4">
-              <div className="text-sm font-medium text-muted-foreground mb-2">Preview da Recompensa</div>
-              <div className="flex items-center justify-between">
-                <div>
-                  <div className="font-medium">{formData.title || "Seu hábito"}</div>
-                  <div className="text-sm text-muted-foreground">
+            <CardContent className="p-3 sm:p-4">
+              <div className="text-xs sm:text-sm font-medium text-muted-foreground mb-1 sm:mb-2">Preview</div>
+              <div className="flex items-center justify-between gap-2">
+                <div className="min-w-0 flex-1">
+                  <div className="font-medium text-sm truncate">{formData.title || "Seu hábito"}</div>
+                  <div className="text-xs text-muted-foreground truncate">
                     {selectedType?.label} • {selectedDifficulty?.label}
                     {formData.type === "habit" && selectedFrequency && ` • ${selectedFrequency.label}`}
                     {formData.type === "todo" &&
@@ -357,27 +357,24 @@ export function CreateHabitModal({ onCreateHabit, children, availableTags = [], 
                       ` • ${new Date(formData.deadline).toLocaleDateString("pt-BR")}`}
                   </div>
                 </div>
-                <div className="flex items-center gap-1 text-primary font-medium">
-                  <Star className="w-4 h-4" />+{selectedDifficulty?.xp} XP
-                  {formData.type === "habit" && formData.frequency !== "flexible" && (
-                    <span className="text-xs text-green-500 ml-2">+5 XP bônus</span>
-                  )}
+                <div className="flex items-center gap-1 text-primary font-medium text-xs sm:text-sm flex-shrink-0">
+                  <Star className="w-3 h-3 sm:w-4 sm:h-4" />+{selectedDifficulty?.xp} XP
                 </div>
               </div>
             </CardContent>
           </Card>
 
           {/* Actions */}
-          <div className="flex gap-3 pt-4">
+          <div className="flex gap-2 sm:gap-3 pt-2 sm:pt-4">
             <Button
               type="button"
               variant="outline"
               onClick={() => setOpen(false)}
-              className="flex-1 glass bg-transparent"
+              className="flex-1 glass bg-transparent text-xs sm:text-sm h-9 sm:h-10"
             >
               Cancelar
             </Button>
-            <Button type="submit" className="flex-1 bg-gradient-to-r from-primary to-accent">
+            <Button type="submit" className="flex-1 bg-gradient-to-r from-primary to-accent text-xs sm:text-sm h-9 sm:h-10">
               Criar {formData.type === "habit" ? "Hábito" : "Afazer"}
             </Button>
           </div>

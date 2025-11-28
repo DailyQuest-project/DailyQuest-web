@@ -117,11 +117,11 @@ export function AchievementsModal({ open, onOpenChange }: AchievementsModalProps
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden glass border-border/50 flex flex-col">
-        <DialogHeader className="pb-4 border-b border-border/30">
-          <DialogTitle className="flex items-center gap-3 text-3xl font-bold">
-            <div className="w-12 h-12 flex items-center justify-center rounded-lg bg-gradient-to-br from-yellow-400 to-orange-500">
-              <Trophy className="w-6 h-6 text-white" />
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden glass border-border/50 flex flex-col p-4 sm:p-6 w-[95vw] sm:w-auto">
+        <DialogHeader className="pb-3 sm:pb-4 border-b border-border/30">
+          <DialogTitle className="flex items-center gap-2 sm:gap-3 text-xl sm:text-3xl font-bold">
+            <div className="w-9 h-9 sm:w-12 sm:h-12 flex items-center justify-center rounded-lg bg-gradient-to-br from-yellow-400 to-orange-500">
+              <Trophy className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
             </div>
             <span className="bg-gradient-to-r from-yellow-400 to-orange-500 bg-clip-text text-transparent">
               Suas Conquistas
@@ -130,37 +130,37 @@ export function AchievementsModal({ open, onOpenChange }: AchievementsModalProps
         </DialogHeader>
 
         {isLoading ? (
-          <div className="flex items-center justify-center py-16 flex-1">
-            <div className="flex flex-col items-center gap-4">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
-              <p className="text-sm text-muted-foreground">Carregando conquistas...</p>
+          <div className="flex items-center justify-center py-12 sm:py-16 flex-1">
+            <div className="flex flex-col items-center gap-3 sm:gap-4">
+              <div className="animate-spin rounded-full h-10 w-10 sm:h-12 sm:w-12 border-b-2 border-primary"></div>
+              <p className="text-xs sm:text-sm text-muted-foreground">Carregando conquistas...</p>
             </div>
           </div>
         ) : (
-          <div className="flex flex-col gap-4 flex-1 overflow-hidden">
+          <div className="flex flex-col gap-3 sm:gap-4 flex-1 overflow-hidden">
             {achievements.length > 0 && (
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-2 gap-2 sm:gap-3">
                 <Card className="glass bg-gradient-to-br from-yellow-500/10 to-orange-600/10 border-yellow-500/20 hover:border-yellow-500/40 transition-all">
-                  <CardContent className="p-4">
-                    <div className="flex items-center gap-3">
-                      <Trophy className="w-8 h-8 text-yellow-400" />
+                  <CardContent className="p-3 sm:p-4">
+                    <div className="flex items-center gap-2 sm:gap-3">
+                      <Trophy className="w-6 h-6 sm:w-8 sm:h-8 text-yellow-400" />
                       <div>
-                        <div className="text-2xl font-bold text-yellow-400">{totalAchievements}</div>
-                        <div className="text-xs text-muted-foreground">Desbloqueadas</div>
+                        <div className="text-lg sm:text-2xl font-bold text-yellow-400">{totalAchievements}</div>
+                        <div className="text-[10px] sm:text-xs text-muted-foreground">Desbloqueadas</div>
                       </div>
                     </div>
                   </CardContent>
                 </Card>
                 
                 <Card className="glass bg-gradient-to-br from-purple-500/10 to-pink-600/10 border-purple-500/20 hover:border-purple-500/40 transition-all">
-                  <CardContent className="p-4">
-                    <div className="flex items-center gap-3">
-                      <div className="text-2xl">🎯</div>
+                  <CardContent className="p-3 sm:p-4">
+                    <div className="flex items-center gap-2 sm:gap-3">
+                      <div className="text-lg sm:text-2xl">🎯</div>
                       <div>
-                        <div className="text-2xl font-bold text-purple-400">
+                        <div className="text-lg sm:text-2xl font-bold text-purple-400">
                           {achievements.filter(a => a.achievement.rarity === 'epic' || a.achievement.rarity === 'legendary').length}
                         </div>
-                        <div className="text-xs text-muted-foreground">Épicas/Lendárias</div>
+                        <div className="text-[10px] sm:text-xs text-muted-foreground">Épicas/Lendárias</div>
                       </div>
                     </div>
                   </CardContent>
@@ -169,34 +169,34 @@ export function AchievementsModal({ open, onOpenChange }: AchievementsModalProps
             )}
 
             <div className="relative">
-              <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <Search className="absolute left-3 sm:left-4 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <Input
                 placeholder="Buscar conquistas..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10 glass bg-transparent text-sm"
+                className="pl-9 sm:pl-10 glass bg-transparent text-xs sm:text-sm h-9 sm:h-10"
               />
             </div>
 
             {achievements.length === 0 ? (
-              <div className="text-center py-16 flex-1 flex flex-col items-center justify-center">
-                <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-muted flex items-center justify-center">
-                  <Lock className="w-8 h-8 text-muted-foreground opacity-50" />
+              <div className="text-center py-12 sm:py-16 flex-1 flex flex-col items-center justify-center">
+                <div className="w-12 h-12 sm:w-16 sm:h-16 mx-auto mb-3 sm:mb-4 rounded-full bg-muted flex items-center justify-center">
+                  <Lock className="w-6 h-6 sm:w-8 sm:h-8 text-muted-foreground opacity-50" />
                 </div>
-                <h3 className="text-lg font-semibold mb-2">Nenhuma conquista ainda</h3>
-                <p className="text-muted-foreground text-sm max-w-md">
+                <h3 className="text-base sm:text-lg font-semibold mb-1 sm:mb-2">Nenhuma conquista ainda</h3>
+                <p className="text-muted-foreground text-xs sm:text-sm max-w-md px-4">
                   Complete tarefas, mantenha sequências e alcance níveis para desbloquear conquistas!
                 </p>
               </div>
             ) : (
-              <div className="flex-1 overflow-y-auto pr-2" style={{ maxHeight: "calc(90vh - 280px)" }}>
+              <div className="flex-1 overflow-y-auto pr-1 sm:pr-2" style={{ maxHeight: "calc(90vh - 280px)" }}>
                 {filteredAchievements.length === 0 ? (
-                  <div className="text-center py-12">
-                    <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-muted/50 flex items-center justify-center">
-                      <Search className="w-8 h-8 text-muted-foreground/50" />
+                  <div className="text-center py-8 sm:py-12">
+                    <div className="w-12 h-12 sm:w-16 sm:h-16 mx-auto mb-3 sm:mb-4 rounded-full bg-muted/50 flex items-center justify-center">
+                      <Search className="w-6 h-6 sm:w-8 sm:h-8 text-muted-foreground/50" />
                     </div>
-                    <h3 className="text-base font-semibold mb-2">Nenhuma conquista encontrada</h3>
-                    <p className="text-muted-foreground text-sm max-w-sm mx-auto">
+                    <h3 className="text-sm sm:text-base font-semibold mb-1 sm:mb-2">Nenhuma conquista encontrada</h3>
+                    <p className="text-muted-foreground text-xs sm:text-sm max-w-sm mx-auto px-4">
                       Tente buscar por outro termo ou limpe a busca para ver todas as conquistas.
                     </p>
                   </div>
@@ -215,45 +215,45 @@ export function AchievementsModal({ open, onOpenChange }: AchievementsModalProps
                           className={`glass border-2 transition-all duration-300 cursor-pointer animate-in fade-in slide-in-from-bottom-2 ${getRarityColor(ach.rarity)}`}
                           onClick={() => setExpandedId(isExpanded ? null : ach.id)}
                         >
-                          <CardContent className="p-4">
-                            <div className="flex items-center justify-between">
-                              <div className="flex items-center gap-4">
-                                <div className="relative">
+                          <CardContent className="p-3 sm:p-4">
+                            <div className="flex items-center justify-between gap-2">
+                              <div className="flex items-center gap-2 sm:gap-4 min-w-0">
+                                <div className="relative flex-shrink-0">
                                   <div className="absolute inset-0 bg-yellow-500/20 blur-lg rounded-full"></div>
-                                  <div className="relative text-4xl transform hover:scale-110 transition-transform">
+                                  <div className="relative text-2xl sm:text-4xl transform hover:scale-110 transition-transform">
                                     {ach.icon}
                                   </div>
                                 </div>
                                 <div className="flex-1 min-w-0">
-                                  <h4 className="font-bold text-base truncate">{ach.name}</h4>
-                                  <p className={`text-xs font-semibold ${getRarityTextColor(ach.rarity)}`}>
+                                  <h4 className="font-bold text-sm sm:text-base truncate">{ach.name}</h4>
+                                  <p className={`text-[10px] sm:text-xs font-semibold ${getRarityTextColor(ach.rarity)}`}>
                                     {getRarityLabel(ach.rarity)}
                                   </p>
                                 </div>
                               </div>
                               <ChevronDown
-                                className={`w-5 h-5 text-muted-foreground transition-transform duration-300 flex-shrink-0 ${
+                                className={`w-4 h-4 sm:w-5 sm:h-5 text-muted-foreground transition-transform duration-300 flex-shrink-0 ${
                                   isExpanded ? "rotate-180" : ""
                                 }`}
                               />
                             </div>
 
                             {isExpanded && (
-                              <div className="mt-4 pt-4 border-t border-border/30 space-y-3 animate-in fade-in slide-in-from-top-2 duration-300">
+                              <div className="mt-3 sm:mt-4 pt-3 sm:pt-4 border-t border-border/30 space-y-2 sm:space-y-3 animate-in fade-in slide-in-from-top-2 duration-300">
                                 <div>
-                                  <p className="text-xs text-muted-foreground font-medium mb-1.5">Descrição</p>
-                                  <p className="text-sm text-foreground leading-relaxed">{ach.description}</p>
+                                  <p className="text-[10px] sm:text-xs text-muted-foreground font-medium mb-1 sm:mb-1.5">Descrição</p>
+                                  <p className="text-xs sm:text-sm text-foreground leading-relaxed">{ach.description}</p>
                                 </div>
 
                                 {ach.progress !== undefined && ach.target !== undefined && (
                                   <div>
-                                    <div className="flex items-center justify-between mb-2">
-                                      <span className="text-xs text-muted-foreground font-medium">Progresso</span>
-                                      <span className="text-xs font-bold text-primary">
+                                    <div className="flex items-center justify-between mb-1.5 sm:mb-2">
+                                      <span className="text-[10px] sm:text-xs text-muted-foreground font-medium">Progresso</span>
+                                      <span className="text-[10px] sm:text-xs font-bold text-primary">
                                         {ach.progress} / {ach.target}
                                       </span>
                                     </div>
-                                    <div className="w-full h-2.5 rounded-full bg-black/20 overflow-hidden">
+                                    <div className="w-full h-2 sm:h-2.5 rounded-full bg-black/20 overflow-hidden">
                                       <div
                                         className="h-full bg-gradient-to-r from-primary to-accent transition-all duration-500 shadow-lg shadow-primary/50"
                                         style={{ width: `${Math.min((ach.progress / ach.target) * 100, 100)}%` }}
@@ -262,11 +262,11 @@ export function AchievementsModal({ open, onOpenChange }: AchievementsModalProps
                                   </div>
                                 )}
 
-                                <div className="flex items-center justify-between pt-2">
-                                  <Badge variant="outline" className="text-xs font-semibold px-2.5 py-0.5">
+                                <div className="flex items-center justify-between pt-1 sm:pt-2">
+                                  <Badge variant="outline" className="text-[10px] sm:text-xs font-semibold px-2 py-0.5">
                                     {ach.category}
                                   </Badge>
-                                  <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                                  <div className="flex items-center gap-1 sm:gap-1.5 text-[10px] sm:text-xs text-muted-foreground">
                                     <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></div>
                                     {formatDate(item.unlocked_at)}
                                   </div>

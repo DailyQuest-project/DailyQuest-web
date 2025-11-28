@@ -658,16 +658,16 @@ function DashboardContent() {
       />
 
       <header className="glass-strong border-b border-border sticky top-0 z-50">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="flex items-center gap-2">
-                <img src="/logo.svg" alt="DailyQuest Logo" className="w-8 h-8" />
-                <h1 className="text-xl md:text-2xl font-bold text-foreground">Daily Quest</h1>
+        <div className="container mx-auto px-3 sm:px-4 py-3 sm:py-4">
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+              <div className="flex items-center gap-1.5 sm:gap-2">
+                <img src="/logo.svg" alt="DailyQuest Logo" className="w-6 h-6 sm:w-8 sm:h-8 flex-shrink-0" />
+                <h1 className="text-base sm:text-xl md:text-2xl font-bold text-foreground truncate">Daily Quest</h1>
               </div>
             </div>
 
-            <div className="flex items-center gap-3 md:gap-6">
+            <div className="flex items-center gap-2 sm:gap-3 md:gap-6">
               <div className="hidden lg:flex items-center gap-2 text-sm">
                 <span className="text-muted-foreground">Nível {user.level}</span>
                 <div className="w-32 h-2 bg-muted rounded-full overflow-hidden">
@@ -681,9 +681,9 @@ function DashboardContent() {
                 </span>
               </div>
 
-              <div className="flex items-center gap-2 glass px-3 py-1 rounded-full">
-                <Coins className="w-4 h-4 text-yellow-500" />
-                <span className="font-medium text-sm">{user.coins}</span>
+              <div className="flex items-center gap-1.5 sm:gap-2 glass px-2 sm:px-3 py-1 rounded-full">
+                <Coins className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-yellow-500" />
+                <span className="font-medium text-xs sm:text-sm">{user.coins}</span>
               </div>
 
               <div className="hidden md:flex items-center gap-2">
@@ -743,20 +743,20 @@ function DashboardContent() {
         </div>
       </header>
 
-      <div className="container mx-auto px-4 py-6">
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-          <div className="lg:col-span-3 space-y-6">
+      <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-6">
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 sm:gap-6">
+          <div className="lg:col-span-3 space-y-4 sm:space-y-6">
             {/* Mobile XP Bar */}
             <div className="lg:hidden">
               <Card className="glass">
-                <CardContent className="p-4">
+                <CardContent className="p-3 sm:p-4">
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm text-muted-foreground">Nível {user.level}</span>
-                    <span className="text-sm text-muted-foreground">
+                    <span className="text-xs sm:text-sm text-muted-foreground">Nível {user.level}</span>
+                    <span className="text-xs sm:text-sm text-muted-foreground">
                       {currentLevelXP}/{xpForNextLevel} XP
                     </span>
                   </div>
-                  <div className="w-full h-3 bg-muted rounded-full overflow-hidden">
+                  <div className="w-full h-2 sm:h-3 bg-muted rounded-full overflow-hidden">
                     <div
                       className="h-full bg-primary transition-all duration-300"
                       style={{ width: `${(currentLevelXP / xpForNextLevel) * 100}%` }}
@@ -768,15 +768,15 @@ function DashboardContent() {
 
             {/* Main Tasks Card */}
             <Card className="glass">
-              <CardHeader className="pb-4">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                  <CardTitle className="text-xl">Suas Missões</CardTitle>
+              <CardHeader className="p-3 sm:p-4 md:p-6 pb-3 sm:pb-4">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
+                  <CardTitle className="text-lg sm:text-xl">Suas Missões</CardTitle>
                   <CreateHabitModal 
                     onCreateHabit={handleCreateTask}
                     availableTags={tags}
                     onManageTags={() => setTagManagerOpen(true)}
                   >
-                    <Button size="sm" className="bg-primary hover:bg-primary/90 w-full sm:w-auto">
+                    <Button size="sm" className="bg-primary hover:bg-primary/90 w-full sm:w-auto text-sm">
                       <Plus className="w-4 h-4 mr-2" />
                       Nova Tarefa
                     </Button>
@@ -784,12 +784,12 @@ function DashboardContent() {
                 </div>
 
                 <Tabs value={selectedTab} onValueChange={(v) => setSelectedTab(v as any)} className="w-full">
-                  <TabsList className="grid w-full grid-cols-2 max-w-[200px]">
-                    <TabsTrigger value="habits">Hábitos</TabsTrigger>
-                    <TabsTrigger value="todos">Afazeres</TabsTrigger>
+                  <TabsList className="grid w-full grid-cols-2 max-w-full sm:max-w-[200px]">
+                    <TabsTrigger value="habits" className="text-xs sm:text-sm">Hábitos</TabsTrigger>
+                    <TabsTrigger value="todos" className="text-xs sm:text-sm">Afazeres</TabsTrigger>
                   </TabsList>
 
-                  <div className="mt-4">
+                  <div className="mt-3 sm:mt-4">
                     <HabitFilters onFilterChange={setFilters} availableTags={availableTags} />
                   </div>
 
@@ -811,37 +811,37 @@ function DashboardContent() {
                         return (
                           <div
                             key={task.id}
-                            className={`glass rounded-lg p-4 transition-all hover:bg-card/90 ${
+                            className={`glass rounded-lg p-3 sm:p-4 transition-all hover:bg-card/90 ${
                               isCompleted ? "opacity-75 bg-green-500/5" : ""
                             }`}
                           >
-                            <div className="flex items-center gap-4">
+                            <div className="flex items-start sm:items-center gap-2 sm:gap-4">
                               <button
                                 onClick={() => handleCompleteTask(task.id)}
-                                className={`w-8 h-8 rounded-full border-2 flex items-center justify-center transition-all flex-shrink-0 cursor-pointer ${
+                                className={`w-6 h-6 sm:w-8 sm:h-8 rounded-full border-2 flex items-center justify-center transition-all flex-shrink-0 cursor-pointer mt-0.5 sm:mt-0 ${
                                   isCompleted
                                     ? "bg-green-500 border-green-500 text-white shadow-lg shadow-green-500/50 hover:bg-green-600"
                                     : "border-muted-foreground hover:border-primary hover:scale-110"
                                 }`}
                                 title={isCompleted ? "Clique para desconcluir" : "Clique para completar"}
                               >
-                                {isCompleted && <Check className="w-5 h-5 font-bold" />}
+                                {isCompleted && <Check className="w-3.5 h-3.5 sm:w-5 sm:h-5 font-bold" />}
                               </button>
 
                               <div className="flex-1 min-w-0">
-                                <div className="flex items-center gap-2 mb-1">
-                                  <h3 className={`font-medium text-base ${isCompleted ? "line-through" : ""}`}>
+                                <div className="flex flex-wrap items-center gap-1 sm:gap-2 mb-1">
+                                  <h3 className={`font-medium text-sm sm:text-base ${isCompleted ? "line-through" : ""}`}>
                                     {task.title}
                                   </h3>
                                   <Badge
                                     variant="secondary"
-                                    className={`${getDifficultyColor(task.difficulty)} text-xs border-0`}
+                                    className={`${getDifficultyColor(task.difficulty)} text-[10px] sm:text-xs border-0`}
                                   >
                                     {getDifficultyText(task.difficulty)}
                                   </Badge>
                                 </div>
                                 {task.description && (
-                                  <p className="text-sm text-muted-foreground">{task.description}</p>
+                                  <p className="text-xs sm:text-sm text-muted-foreground line-clamp-2">{task.description}</p>
                                 )}
                                 
                                 {/* Tags */}
@@ -926,12 +926,12 @@ function DashboardContent() {
                                 })()}
                               </div>
 
-                              <div className="text-right space-y-1 flex-shrink-0">
-                                <div className="flex items-center gap-1 text-sm font-medium text-primary">
-                                  <Star className="w-4 h-4" />+{xpValue} XP
+                              <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3 text-right flex-shrink-0">
+                                <div className="flex items-center gap-1 text-xs sm:text-sm font-medium text-primary justify-end">
+                                  <Star className="w-3.5 h-3.5 sm:w-4 sm:h-4" />+{xpValue} XP
                                 </div>
-                                <div className="flex items-center gap-1 text-sm text-orange-500">
-                                  <Flame className="w-4 h-4" />
+                                <div className="flex items-center gap-1 text-xs sm:text-sm text-orange-500 justify-end">
+                                  <Flame className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                                   {(() => {
                                     const streak = (task as any).current_streak || 0
                                     // Se o streak é 0 mas a tarefa foi completada hoje, mostrar 1
@@ -1086,12 +1086,12 @@ function DashboardContent() {
           </div>
 
           {/* Sidebar */}
-          <div className="space-y-6">
+          <div className="space-y-4 sm:space-y-6">
             {/* Calendar Card */}
             <Card className="glass">
-              <CardHeader className="pb-4">
+              <CardHeader className="p-3 sm:p-4 md:p-6 pb-3 sm:pb-4">
                 <div className="flex items-center justify-between">
-                  <CardTitle className="text-base">Seu Progresso</CardTitle>
+                  <CardTitle className="text-sm sm:text-base">Seu Progresso</CardTitle>
                   <div className="flex items-center gap-1">
                     <Button 
                       variant="ghost" 
@@ -1111,12 +1111,12 @@ function DashboardContent() {
                     </Button>
                   </div>
                 </div>
-                <p className="text-sm text-muted-foreground uppercase">{currentMonth}</p>
+                <p className="text-xs sm:text-sm text-muted-foreground uppercase">{currentMonth}</p>
               </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-7 gap-1 mb-4">
+              <CardContent className="p-3 sm:p-4 md:p-6 pt-0">
+                <div className="grid grid-cols-7 gap-0.5 sm:gap-1 mb-3 sm:mb-4">
                   {["D", "S", "T", "Q", "Q", "S", "S"].map((day, index) => (
-                    <div key={index} className="text-center text-xs text-muted-foreground p-1">
+                    <div key={index} className="text-center text-[10px] sm:text-xs text-muted-foreground p-0.5 sm:p-1">
                       {day}
                     </div>
                   ))}
@@ -1124,11 +1124,11 @@ function DashboardContent() {
                     <div key={index} className="aspect-square">
                       {day ? (
                         <div
-                          className={`w-full h-full rounded-full flex items-center justify-center text-xs transition-all ${
+                          className={`w-full h-full rounded-full flex items-center justify-center text-[10px] sm:text-xs transition-all ${
                             day.isCompleted
                               ? "bg-primary text-white"
                               : day.isToday
-                                ? "bg-muted text-foreground ring-2 ring-primary"
+                                ? "bg-muted text-foreground ring-1 sm:ring-2 ring-primary"
                                 : "text-muted-foreground hover:bg-muted"
                           }`}
                         >
@@ -1141,14 +1141,14 @@ function DashboardContent() {
                   ))}
                 </div>
 
-                <div className="grid grid-cols-2 gap-4 text-center">
+                <div className="grid grid-cols-2 gap-2 sm:gap-4 text-center">
                   <div>
-                    <div className="text-2xl font-bold text-primary">{completedTodayCount}</div>
-                    <div className="text-xs text-muted-foreground">completadas hoje</div>
+                    <div className="text-lg sm:text-2xl font-bold text-primary">{completedTodayCount}</div>
+                    <div className="text-[10px] sm:text-xs text-muted-foreground">completadas hoje</div>
                   </div>
                   <div>
-                    <div className="text-2xl font-bold text-primary">{tasks.length}</div>
-                    <div className="text-xs text-muted-foreground">tarefas totais</div>
+                    <div className="text-lg sm:text-2xl font-bold text-primary">{tasks.length}</div>
+                    <div className="text-[10px] sm:text-xs text-muted-foreground">tarefas totais</div>
                   </div>
                 </div>
               </CardContent>
@@ -1156,28 +1156,28 @@ function DashboardContent() {
 
             {/* Achievements Card */}
             <Card className="glass">
-              <CardHeader className="pb-4">
+              <CardHeader className="p-3 sm:p-4 md:p-6 pb-3 sm:pb-4">
                 <div className="flex items-center justify-between">
-                  <CardTitle className="flex items-center gap-2 text-base">
-                    <Trophy className="w-5 h-5 text-yellow-500" />
+                  <CardTitle className="flex items-center gap-2 text-sm sm:text-base">
+                    <Trophy className="w-4 h-4 sm:w-5 sm:h-5 text-yellow-500" />
                     Conquistas
                   </CardTitle>
                   <Button
                     variant="ghost"
                     size="sm"
                     onClick={() => setAchievementsModalOpen(true)}
-                    className="text-xs text-primary hover:text-primary/80"
+                    className="text-[10px] sm:text-xs text-primary hover:text-primary/80 h-7 sm:h-8 px-2"
                   >
                     Ver Todas
                   </Button>
                 </div>
               </CardHeader>
-              <CardContent>
+              <CardContent className="p-3 sm:p-4 md:p-6 pt-0">
                 {userAchievements.length === 0 ? (
-                  <div className="text-center py-6 text-muted-foreground">
-                    <Trophy className="w-10 h-10 mx-auto mb-2 opacity-30" />
-                    <p className="text-xs">Nenhuma conquista ainda</p>
-                    <p className="text-[10px] mt-1">Complete tarefas para desbloquear!</p>
+                  <div className="text-center py-4 sm:py-6 text-muted-foreground">
+                    <Trophy className="w-8 h-8 sm:w-10 sm:h-10 mx-auto mb-2 opacity-30" />
+                    <p className="text-[10px] sm:text-xs">Nenhuma conquista ainda</p>
+                    <p className="text-[10px] mt-1 hidden sm:block">Complete tarefas para desbloquear!</p>
                   </div>
                 ) : (
                   <div className="space-y-2">
@@ -1186,18 +1186,18 @@ function DashboardContent() {
                       return (
                         <div
                           key={ach.id}
-                          className="p-3 rounded-lg border bg-gradient-to-br from-yellow-500/10 to-orange-500/10 border-yellow-500/30 hover:border-yellow-500/50 transition-all group cursor-pointer"
+                          className="p-2 sm:p-3 rounded-lg border bg-gradient-to-br from-yellow-500/10 to-orange-500/10 border-yellow-500/30 hover:border-yellow-500/50 transition-all group cursor-pointer"
                           onClick={() => setAchievementsModalOpen(true)}
                         >
-                          <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 flex items-center justify-center rounded-full bg-yellow-500/20 text-xl group-hover:scale-110 transition-transform">
+                          <div className="flex items-center gap-2 sm:gap-3">
+                            <div className="w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center rounded-full bg-yellow-500/20 text-base sm:text-xl group-hover:scale-110 transition-transform">
                               {ach.icon}
                             </div>
                             <div className="min-w-0 flex-1">
-                              <div className="font-semibold text-sm text-foreground">
+                              <div className="font-semibold text-xs sm:text-sm text-foreground">
                                 {ach.name}
                               </div>
-                              <div className="text-xs text-muted-foreground line-clamp-1">
+                              <div className="text-[10px] sm:text-xs text-muted-foreground line-clamp-1">
                                 {ach.description}
                               </div>
                             </div>

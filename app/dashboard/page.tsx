@@ -130,6 +130,9 @@ function DashboardContent() {
   const [tagManagerOpen, setTagManagerOpen] = useState(false)
   const [achievementsModalOpen, setAchievementsModalOpen] = useState(false)
   
+  // Estado do avatar do usuário (carregado do localStorage)
+  const [userAvatar, setUserAvatar] = useState("🧙‍♂️")
+  
   // Estados do calendário
   const [currentCalendarDate, setCurrentCalendarDate] = useState(new Date())
   const [completionHistory, setCompletionHistory] = useState<CompletionHistoryItem[]>([])
@@ -137,6 +140,16 @@ function DashboardContent() {
   
   // Estados de achievements
   const [userAchievements, setUserAchievements] = useState<any[]>([])
+
+  // Carregar avatar do localStorage quando user estiver disponível
+  useEffect(() => {
+    if (user) {
+      const savedAvatar = localStorage.getItem(`avatar_${user.id}`)
+      if (savedAvatar) {
+        setUserAvatar(savedAvatar)
+      }
+    }
+  }, [user])
 
   // Buscar conquistas do usuário
   useEffect(() => {
@@ -279,13 +292,21 @@ function DashboardContent() {
   // Atualizar perfil do usuário
   const handleUpdateUserProfile = useCallback(async (userData: any) => {
     try {
-      // TODO: Implementar atualização do perfil no backend
       console.log('Atualizar perfil:', userData)
-      // Por enquanto, apenas log
+      
+      // Salvar avatar no localStorage (enquanto não há endpoint no backend)
+      if (userData.avatar && user) {
+        localStorage.setItem(`avatar_${user.id}`, userData.avatar)
+        setUserAvatar(userData.avatar) // Atualizar estado local
+        console.log('✅ Avatar salvo:', userData.avatar)
+      }
+      
+      // TODO: Quando o backend suportar, chamar API para atualizar perfil
+      // await authService.updateProfile({ avatar_url: userData.avatar })
     } catch (error) {
       console.error('Erro ao atualizar perfil:', error)
     }
-  }, [])
+  }, [user])
 
   // Atualizar calendário quando mudar o mês ou o histórico
   useEffect(() => {
@@ -520,6 +541,13 @@ function DashboardContent() {
     return false
   }).length
 
+  // Calcular maior sequência (streak) dos hábitos do usuário
+  const longestStreak = useMemo(() => {
+    const habits = tasks.filter(t => t.task_type === "habit")
+    if (habits.length === 0) return 0
+    return Math.max(...habits.map((h: any) => h.best_streak || h.current_streak || 0), 0)
+  }, [tasks])
+
   if (!user) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -551,8 +579,8 @@ function DashboardContent() {
           xp: user.xp,
           xpToNext: xpForNextLevel,
           coins: user.coins,
-          streak: 0, // TODO: Calcular streak real
-          avatar: "🧙‍♂️", // TODO: Permitir que usuário escolha
+          streak: longestStreak,
+          avatar: userAvatar,
         }}
         habits={tasks.filter(t => t.task_type === "habit")}
         achievements={achievements}
@@ -665,7 +693,7 @@ function DashboardContent() {
                   <DropdownMenuTrigger asChild>
                     <Avatar className="border-2 border-primary/20 cursor-pointer hover:scale-105 transition-transform">
                       <AvatarFallback className="text-lg">
-                        {user.username.substring(0, 2).toUpperCase()}
+                        {userAvatar}
                       </AvatarFallback>
                     </Avatar>
                   </DropdownMenuTrigger>
@@ -698,8 +726,8 @@ function DashboardContent() {
                   xp: currentLevelXP,
                   xpToNext: xpForNextLevel,
                   coins: user.coins,
-                  streak: 0,
-                  avatar: "🧙‍♂️",
+                  streak: longestStreak,
+                  avatar: userAvatar,
                 }}
                 soundEnabled={soundEnabled}
                 onSoundToggle={() => setSoundEnabled(!soundEnabled)}

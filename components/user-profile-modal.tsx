@@ -78,6 +78,16 @@ export function UserProfileModal({
     avatar: userData.avatar,
   })
 
+  // Sincronizar formData quando userData mudar ou modal abrir
+  useEffect(() => {
+    if (open) {
+      setFormData({
+        name: userData.name,
+        avatar: userData.avatar,
+      })
+    }
+  }, [open, userData.name, userData.avatar])
+
   // Estados para dados da API
   const [completionHistory, setCompletionHistory] = useState<any[]>([])
   const [currentMonth, setCurrentMonth] = useState(new Date())
@@ -208,14 +218,17 @@ export function UserProfileModal({
   const handleSave = () => {
     onUpdateUser({ ...userData, ...formData })
     setEditMode(false)
+    // Fechar e reabrir o modal para forçar atualização dos dados
+    setOpen(false)
+    setTimeout(() => setOpen(true), 100)
   }
 
   const totalHabits = habits.length
   const completedToday = completedHabits.size
   const completionRate = totalHabits > 0 ? (completedToday / totalHabits) * 100 : 0
   const totalXPEarned = habits.reduce((sum, habit) => sum + (completedHabits.has(habit.id) ? habit.xp : 0), 0)
-  const longestStreak = Math.max(...habits.map((h) => h.streak || 0), 0)
-  const unlockedAchievements = achievements.filter((a) => a.unlocked).length
+  const longestStreak = userData.streak || Math.max(...habits.map((h: any) => h.best_streak || h.current_streak || h.streak || 0), 0)
+  const unlockedAchievements = userAchievements.length
 
   const monthlyXP = getMonthlyXP()
   const calendarDays = getCalendarData()

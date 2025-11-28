@@ -50,14 +50,14 @@ def create_task(driver, title, description="", difficulty="MEDIUM"):
     title_field = wait_for_clickable(driver, (By.ID, "title"), timeout=5)
     title_field.clear()
     title_field.send_keys(title)
-    wait(0.5)
+    wait(0.2)
 
     if description:
         try:
             desc_field = wait_for_clickable(driver, (By.ID, "description"), timeout=3)
             desc_field.clear()
             desc_field.send_keys(description)
-            wait(0.5)
+            wait(0.2)
         except Exception:
             log_action("Campo de descrição não encontrado, continuando...")
 
@@ -67,7 +67,7 @@ def create_task(driver, title, description="", difficulty="MEDIUM"):
             deadline_field = wait_for_clickable(driver, (By.ID, "deadline"), timeout=3)
             # deadline expected in YYYY-MM-DD format if provided in title var or elsewhere
             # If not provided, skip
-            wait(0.5)
+            wait(0.2)
         except Exception:
             log_action("Campo deadline não encontrado")
 

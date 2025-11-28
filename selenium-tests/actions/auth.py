@@ -25,7 +25,7 @@ def navigate_to_login(driver):
     """Navega para página de login"""
     log_action("Navegando para login")
     driver.get(f"{BASE_URL}/login")
-    wait(0.5)  # Reduzido de DEFAULT_DELAY (2.0)
+    wait(0.3)
     wait_for_url_contains(driver, "/login")
 
 
@@ -48,19 +48,17 @@ def login(driver, username, password):
     # Preenche username
     username_field = wait_for_clickable(driver, (By.ID, "username"))
     username_field.clear()
-    username_field.send_keys(username)  # Mais rápido que slow_type
-    wait(0.3)  # Reduzido de 0.5
+    username_field.send_keys(username)
     
     # Preenche password
     password_field = wait_for_clickable(driver, (By.ID, "password"))
     password_field.clear()
-    password_field.send_keys(password)  # Mais rápido que slow_type
-    wait(0.3)  # Reduzido de 0.5
+    password_field.send_keys(password)
     
     # Clica em entrar
     login_button = wait_for_clickable(driver, (By.CSS_SELECTOR, "button[type='submit']"))
     login_button.click()
-    wait(0.5)  # Reduzido de DEFAULT_DELAY (2.0)
+    wait(0.3)
     
     # Verifica se chegou ao dashboard
     success = wait_for_url_contains(driver, "/dashboard", timeout=5)
@@ -74,7 +72,7 @@ def navigate_to_register(driver):
     """Navega para página de registro"""
     log_action("Navegando para registro")
     driver.get(f"{BASE_URL}/register")
-    wait(0.5)  # Reduzido de DEFAULT_DELAY (2.0)
+    wait(0.3)
     wait_for_url_contains(driver, "/register")
 
 
@@ -115,7 +113,7 @@ def register(driver, username, email, password):
     # Clica em registrar
     register_button = wait_for_clickable(driver, (By.CSS_SELECTOR, "button[type='submit']"))
     register_button.click()
-    wait(1.0)  # Reduzido de DEFAULT_DELAY * 2 (4.0)
+    wait(0.4)
     
     # Verifica se chegou ao dashboard ou login
     success = wait_for_url_contains(driver, "/dashboard", timeout=10) or \
@@ -134,11 +132,11 @@ def logout(driver):
     try:
         # Tenta clicar no botão de profile/menu
         profile_button = safe_click(driver, (By.CSS_SELECTOR, "button[aria-label='Profile']"))
-        wait(0.5)  # Reduzido de 1.0
+        wait(0.25)
         
         # Clica em logout
         logout_button = safe_click(driver, (By.XPATH, "//button[contains(text(), 'Sair') or contains(text(), 'Logout')]"))
-        wait(0.5)  # Reduzido de DEFAULT_DELAY (2.0)
+        wait(0.25)
         
         # Verifica se voltou para login
         success = wait_for_url_contains(driver, "/login", timeout=5)
@@ -150,5 +148,5 @@ def logout(driver):
         log_action("Erro ao fazer logout", str(e))
         # Fallback: navega direto para login
         driver.get(f"{BASE_URL}/login")
-        wait(0.5)  # Reduzido de DEFAULT_DELAY (2.0)
+        wait(0.3)
         return True

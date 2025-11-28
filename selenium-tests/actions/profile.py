@@ -26,32 +26,27 @@ def open_profile_modal(driver):
     
     # Scroll para topo para ver o avatar
     driver.execute_script("window.scrollTo(0, 0);")
-    wait(0.2)  # Reduzido de 0.3
     
     try:
         # O avatar é um SPAN com texto (iniciais do usuário) e cursor-pointer
-        # Estratégia: Procura span com cursor-pointer no header
         try:
             avatar = wait_for_clickable(driver, (
                 By.XPATH,
                 "//span[contains(@class, 'cursor-pointer') and contains(@class, 'rounded-full') and contains(@class, 'border-2')]"
             ), timeout=5)
             driver.execute_script("arguments[0].scrollIntoView({behavior: 'instant', block: 'center'});", avatar)
-            wait(0.1)  # Reduzido de 0.2
             try:
                 avatar.click()
             except Exception:
                 driver.execute_script("arguments[0].click();", avatar)
-            wait(0.5)  # Reduzido de 0.8
+            wait(0.2)
             log_action("Avatar clicado, aguardando dropdown")
         except Exception as e:
             log_action(f"Erro ao clicar no avatar: {str(e)[:50]}")
-            # Estratégia alternativa: busca qualquer elemento clicável com iniciais
             avatar = driver.find_element(By.XPATH, "//span[string-length(text())=2 and contains(@class, 'rounded-full')]")
             driver.execute_script("arguments[0].scrollIntoView({behavior: 'instant', block: 'center'});", avatar)
-            wait(0.1)  # Reduzido de 0.2
             driver.execute_script("arguments[0].click();", avatar)
-            wait(0.5)  # Reduzido de 0.8
+            wait(0.2)
         
         # Clica em "Ver Perfil" no menu dropdown
         try:
@@ -64,12 +59,11 @@ def open_profile_modal(driver):
             except Exception:
                 driver.execute_script("arguments[0].click();", profile_item)
         except Exception:
-            # fallback: procura item do menu com ícone Trophy (Ver Perfil)
             log_action("Tentando encontrar item 'Ver Perfil' por ícone")
             profile_item = driver.find_element(By.XPATH, "//div[.//svg and contains(., 'Ver Perfil')]")
             driver.execute_script("arguments[0].click();", profile_item)
         
-        wait(0.3)  # Reduzido de 0.5
+        wait(0.2)
         
         # Verifica se modal abriu
         modal = wait_for_element(driver, (
@@ -91,7 +85,6 @@ def close_profile_modal(driver):
     try:
         # Tenta ESC key primeiro (mais rápido)
         driver.find_element(By.TAG_NAME, 'body').send_keys(Keys.ESCAPE)
-        wait(0.3)  # Reduzido de 0.5
         log_action("Modal de perfil fechado (ESC)")
         return True
     except Exception:
@@ -106,7 +99,6 @@ def close_profile_modal(driver):
             close_button.click()
         except Exception:
             driver.execute_script("arguments[0].click();", close_button)
-        wait(0.3)  # Reduzido de 0.5
         
         log_action("Modal de perfil fechado")
         return True
@@ -118,7 +110,6 @@ def close_profile_modal(driver):
 def verify_user_stats(driver):
     """Verifica estatísticas do usuário no perfil"""
     log_action("Perfil visualizado")
-    wait(0.3)  # Reduzido de 0.5
     # Verificação simplificada para velocidade
     return {"profile": True}
 
@@ -154,14 +145,11 @@ def navigate_calendar_next(driver):
                 "//button[contains(text(), 'Progresso')]"
             ), timeout=3)
             progress_tab.click()
-            wait(0.3)  # Reduzido de 0.5
+            wait(0.2)
         except Exception as e:
             log_action(f"Não conseguiu abrir aba Progresso: {str(e)[:50]}")
         
-        # Busca diretamente os botões de navegação (mais específico)
-        # Eles são buttons pequenos com SVG dentro, geralmente com chevron icons
-        # Usa wait para garantir que a aba carregou
-        wait(0.2)
+        # Busca diretamente os botões de navegação
         calendar_nav_buttons = driver.find_elements(By.XPATH, 
             "//div[@role='dialog']//button[@class and contains(@class, 'p-1')]//*[name()='svg']/.."
         )
@@ -171,14 +159,13 @@ def navigate_calendar_next(driver):
             calendar_nav_buttons = [btn for btn in driver.find_elements(By.XPATH, "//div[@role='dialog']//button[contains(@class, 'p-1')]") 
                                    if btn.find_elements(By.TAG_NAME, 'svg')]
         
-        # O último deve ser "próximo" (seta direita), o penúltimo "anterior"
+        # O último deve ser "próximo" (seta direita)
         if len(calendar_nav_buttons) >= 2:
             next_button = calendar_nav_buttons[-1]
             try:
                 next_button.click()
             except Exception:
                 driver.execute_script("arguments[0].click();", next_button)
-            wait(0.3)
             log_action("✓ Próximo mês selecionado")
             return True
         else:
@@ -196,17 +183,15 @@ def navigate_calendar_previous(driver):
     
     try:
         # A aba Progresso já deve estar aberta do passo anterior
-        # Mas verifica mesmo assim
         try:
             progress_tab = driver.find_element(By.XPATH, "//button[contains(text(), 'Progresso')]")
             if 'data-state=active' not in (progress_tab.get_attribute('data-state') or ''):
                 progress_tab.click()
-                wait(0.3)
+                wait(0.2)
         except Exception:
             pass
         
-        # Busca diretamente os botões de navegação com SVG (mais rápido)
-        wait(0.2)
+        # Busca diretamente os botões de navegação com SVG
         calendar_nav_buttons = driver.find_elements(By.XPATH, 
             "//div[@role='dialog']//button[@class and contains(@class, 'p-1')]//*[name()='svg']/.."
         )
@@ -223,7 +208,6 @@ def navigate_calendar_previous(driver):
                 prev_button.click()
             except Exception:
                 driver.execute_script("arguments[0].click();", prev_button)
-            wait(0.3)
             log_action("✓ Mês anterior selecionado")
             return True
         else:
@@ -232,4 +216,169 @@ def navigate_calendar_previous(driver):
             
     except Exception as e:
         log_action("Erro ao navegar calendário", str(e)[:80])
+        return False
+
+
+def edit_character(driver, avatar_index=None):
+    """
+    Edita o avatar/personagem do usuário no modal de perfil.
+    Se avatar_index for None, seleciona um avatar diferente do atual automaticamente.
+    avatar_index: 0-12 (índice do avatar na lista de opções)
+    
+    Avatares disponíveis: 🧙‍♂️, 👨‍💻, 👩‍🎨, 🦸‍♂️, 🦸‍♀️, 👨‍🚀, 👩‍🚀, 🧑‍🎓, 👨‍⚕️, 👩‍⚕️, 🧑‍🍳, 👨‍🌾, 👩‍🌾
+    """
+    log_action("Editando personagem/avatar")
+    
+    try:
+        # Navega para a aba de Configurações
+        try:
+            settings_tab = wait_for_clickable(driver, (
+                By.XPATH,
+                "//button[@role='tab' and (contains(text(), 'Config') or contains(text(), 'Configurações'))]"
+            ), timeout=5)
+            try:
+                settings_tab.click()
+            except Exception:
+                driver.execute_script("arguments[0].click();", settings_tab)
+            wait(0.2)
+            log_action("Aba Configurações selecionada")
+        except Exception as e:
+            log_action(f"Erro ao selecionar aba Config: {str(e)[:50]}")
+        
+        # Clica no botão "Editar" para entrar em modo de edição
+        try:
+            edit_btn = wait_for_clickable(driver, (
+                By.XPATH,
+                "//button[contains(., 'Editar')]"
+            ), timeout=5)
+            try:
+                edit_btn.click()
+            except Exception:
+                driver.execute_script("arguments[0].click();", edit_btn)
+            wait(0.2)
+            log_action("Modo de edição ativado")
+        except Exception as e:
+            log_action(f"Erro ao clicar em Editar: {str(e)[:50]}")
+            return False
+        
+        # Encontra todos os botões de avatar
+        avatar_buttons = driver.find_elements(By.XPATH, 
+            "//div[@role='dialog']//button[contains(@class, 'rounded-lg') and contains(@class, 'border-2')]"
+        )
+        
+        if not avatar_buttons:
+            # Fallback: busca por div com emojis
+            avatar_buttons = driver.find_elements(By.XPATH, 
+                "//div[@role='dialog']//div[contains(@class, 'grid')]//button"
+            )
+        
+        log_action(f"Encontrados {len(avatar_buttons)} avatares")
+        
+        if len(avatar_buttons) == 0:
+            log_action("Nenhum avatar encontrado")
+            return False
+        
+        # Se não especificou índice, seleciona um diferente do atual
+        if avatar_index is None:
+            # Encontra qual está selecionado (tem border-primary)
+            current_index = 0
+            for i, btn in enumerate(avatar_buttons):
+                classes = btn.get_attribute('class') or ''
+                if 'border-primary' in classes or 'bg-primary' in classes:
+                    current_index = i
+                    break
+            
+            # Seleciona o próximo avatar
+            avatar_index = (current_index + 1) % len(avatar_buttons)
+            log_action(f"Avatar atual: {current_index}, novo: {avatar_index}")
+        
+        # Clica no avatar selecionado
+        if avatar_index < len(avatar_buttons):
+            avatar_btn = avatar_buttons[avatar_index]
+            try:
+                avatar_btn.click()
+            except Exception:
+                driver.execute_script("arguments[0].click();", avatar_btn)
+            log_action(f"Avatar {avatar_index} selecionado")
+        
+        # Clica no botão "Salvar"
+        try:
+            save_btn = wait_for_clickable(driver, (
+                By.XPATH,
+                "//button[contains(., 'Salvar')]"
+            ), timeout=5)
+            try:
+                save_btn.click()
+            except Exception:
+                driver.execute_script("arguments[0].click();", save_btn)
+            wait(0.3)
+            log_action("Alterações salvas")
+        except Exception as e:
+            log_action(f"Erro ao salvar: {str(e)[:50]}")
+            return False
+        
+        log_action("✓ Personagem editado com sucesso")
+        return True
+        
+    except Exception as e:
+        log_action(f"Erro ao editar personagem: {str(e)[:80]}")
+        return False
+
+
+def edit_profile_name(driver, new_name):
+    """
+    Edita o nome do usuário no modal de perfil
+    """
+    log_action(f"Editando nome do perfil para: {new_name}")
+    
+    try:
+        # Navega para a aba de Configurações
+        try:
+            settings_tab = wait_for_clickable(driver, (
+                By.XPATH,
+                "//button[@role='tab' and (contains(text(), 'Config') or contains(text(), 'Configurações'))]"
+            ), timeout=5)
+            try:
+                settings_tab.click()
+            except Exception:
+                driver.execute_script("arguments[0].click();", settings_tab)
+            wait(0.2)
+        except Exception:
+            pass
+        
+        # Clica no botão "Editar" para entrar em modo de edição
+        edit_btn = wait_for_clickable(driver, (
+            By.XPATH,
+            "//button[contains(., 'Editar')]"
+        ), timeout=5)
+        try:
+            edit_btn.click()
+        except Exception:
+            driver.execute_script("arguments[0].click();", edit_btn)
+        wait(0.2)
+        
+        # Encontra e preenche o campo de nome
+        name_field = wait_for_clickable(driver, (
+            By.ID, "name"
+        ), timeout=5)
+        name_field.clear()
+        name_field.send_keys(new_name)
+        log_action(f"Nome alterado para: {new_name}")
+        
+        # Clica no botão "Salvar"
+        save_btn = wait_for_clickable(driver, (
+            By.XPATH,
+            "//button[contains(., 'Salvar')]"
+        ), timeout=5)
+        try:
+            save_btn.click()
+        except Exception:
+            driver.execute_script("arguments[0].click();", save_btn)
+        wait(0.3)
+        
+        log_action("✓ Nome do perfil atualizado")
+        return True
+        
+    except Exception as e:
+        log_action(f"Erro ao editar nome: {str(e)[:80]}")
         return False

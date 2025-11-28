@@ -32,10 +32,8 @@ def open_achievements_modal(driver):
             try:
                 btn.click()
             except Exception:
-                # fallback: JS click when click is intercepted
                 driver.execute_script("arguments[0].click();", btn)
         except Exception:
-            # fallback: procura por texto genérico
             btn = wait_for_clickable(driver, (By.XPATH, "//button[contains(., 'Conquistas') or contains(., 'Achievements') or contains(., 'Ver Todas')]"), timeout=4)
             try:
                 btn.click()
@@ -43,7 +41,7 @@ def open_achievements_modal(driver):
                 driver.execute_script("arguments[0].click();", btn)
 
         # pequena espera para animação
-        wait(0.8)
+        wait(0.3)
 
         # Verifica se modal abriu
         modal = wait_for_element(driver, (
@@ -54,13 +52,11 @@ def open_achievements_modal(driver):
         log_action("Modal de conquistas aberto")
         return True
     except Exception as e:
-        # Se click foi interceptado por overlays, tenta fechar overlays e tentar novamente
         log_action("Erro ao abrir modal de conquistas", str(e)[:120])
         try:
-            # tenta clicar via script em um possível trigger alternativo (sidebar link)
             alt = driver.find_element(By.XPATH, "//a[contains(., 'Conquistas') or contains(., 'Achievements')]")
             driver.execute_script("arguments[0].click();", alt)
-            wait(1)
+            wait(0.3)
             modal = wait_for_element(driver, (By.CSS_SELECTOR, "[role='dialog'], [class*='modal']"), timeout=5)
             log_action("Modal de conquistas aberto via fallback")
             return True
@@ -76,7 +72,6 @@ def close_achievements_modal(driver):
     try:
         # Tenta ESC key primeiro (mais rápido)
         driver.find_element(By.TAG_NAME, 'body').send_keys(Keys.ESCAPE)
-        wait(DEFAULT_DELAY)
         log_action("Modal de conquistas fechado (ESC)")
         return True
     except Exception:
@@ -92,7 +87,6 @@ def close_achievements_modal(driver):
             close_button.click()
         except Exception:
             driver.execute_script("arguments[0].click();", close_button)
-        wait(DEFAULT_DELAY)
         
         log_action("Modal de conquistas fechado")
         return True
@@ -195,10 +189,10 @@ def scroll_achievements(driver):
         
         # Scroll rápido dentro do modal
         driver.execute_script("arguments[0].scrollTop = arguments[0].scrollHeight / 2", modal)
-        wait(0.5)  # Reduzido de 1
+        wait(0.25)
         
         driver.execute_script("arguments[0].scrollTop = arguments[0].scrollHeight", modal)
-        wait(0.5)  # Reduzido de 1
+        wait(0.25)
         
         log_action("Conquistas visualizadas")
         return True

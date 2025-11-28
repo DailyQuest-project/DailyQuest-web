@@ -114,7 +114,7 @@ def execute_test_flow(driver, scenarios):
     log_action("========================================")
     log_action("INICIANDO DEMONSTRAÇÃO DAILYQUEST")
     log_action("========================================")
-    wait(1)
+    wait(0.3)
     
     # Contadores para criar múltiplos items
     habit_counter = 0
@@ -152,6 +152,40 @@ def execute_test_flow(driver, scenarios):
                     # Se não tiver mais hábitos definidos, cria um genérico
                     habits.create_habit(driver, f"Hábito Demo {habit_counter+1}", "Descrição padrão")
                     habit_counter += 1
+
+            elif action == "create_habit_specific_days":
+                # Cria um hábito com dias específicos da semana
+                days = step.get("days", [1, 3, 5])  # Default: Seg, Qua, Sex
+                habits_list = scenarios.get("habits", [])
+                
+                # Procura o próximo hábito com frequência SPECIFIC_DAYS
+                habit_data = None
+                for h in habits_list[habit_counter:]:
+                    if h.get("frequency") == "SPECIFIC_DAYS":
+                        habit_data = h
+                        break
+                
+                if habit_data:
+                    habits.create_habit_with_specific_days(
+                        driver, 
+                        habit_data.get("name", f"Hábito Dias Específicos {habit_counter+1}"),
+                        habit_data.get("description", ""),
+                        habit_data.get("difficulty", "medium"),
+                        habit_data.get("days", days)
+                    )
+                else:
+                    habits.create_habit_with_specific_days(
+                        driver,
+                        f"Hábito Dias Específicos {habit_counter+1}",
+                        "Hábito com dias específicos",
+                        "medium",
+                        days
+                    )
+                habit_counter += 1
+
+            elif action == "manage_tags":
+                # Demonstra CRUD completo de tags
+                habits.manage_tags_full_crud(driver)
 
             elif action == "create_todo":
                 # Cria um afazer (todo) usando o próximo task do cenário
@@ -202,14 +236,19 @@ def execute_test_flow(driver, scenarios):
             elif action == "calendar_previous":
                 profile.navigate_calendar_previous(driver)
             
+            elif action == "edit_character":
+                # Edita o avatar/personagem do usuário
+                avatar_index = step.get("avatar_index", None)
+                profile.edit_character(driver, avatar_index)
+            
             else:
                 log_action(f"Ação não implementada: {action}")
             
-            wait(DEFAULT_DELAY)
+            wait(0.2)
             
         except Exception as e:
             log_action(f"Erro no passo {idx}: {str(e)[:100]}")
-            wait(1)
+            wait(0.3)
     
     log_action("========================================")
     log_action("DEMONSTRAÇÃO CONCLUÍDA")

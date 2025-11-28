@@ -6,10 +6,10 @@ DEFAULT_TIMEOUT = 5
 LONG_TIMEOUT = 10
 SHORT_TIMEOUT = 3
 
-# Delays (em segundos) - Otimizados para performance
-DEFAULT_DELAY = 1.0  # Reduzido de 2.0 para 1.0
-SHORT_DELAY = 0.3    # Reduzido de 0.5 para 0.3
-LONG_DELAY = 1.5     # Reduzido de 3.0 para 1.5
+# Delays (em segundos) - Otimizados para fluidez máxima
+DEFAULT_DELAY = 0.3   # Delay padrão entre ações
+SHORT_DELAY = 0.1     # Delay curto
+LONG_DELAY = 0.5      # Delay longo
 
 # Configuração do Chrome
 CHROME_OPTIONS = [

@@ -29,11 +29,30 @@
   "habits": [
     {
       "name": "Estudar 1 hora por dia",
-      "difficulty": "MEDIUM"
+      "description": "Foco em programação e inglês",
+      "difficulty": "MEDIUM",
+      "frequency": "DAILY"
     },
     {
       "name": "Fazer exercícios físicos",
-      "difficulty": "EASY"
+      "description": "Academia ou corrida",
+      "difficulty": "EASY",
+      "frequency": "SPECIFIC_DAYS",
+      "days": [1, 3, 5]
+    }
+  ],
+  "tags": [
+    {
+      "name": "Saúde",
+      "color_index": 5
+    },
+    {
+      "name": "Estudos", 
+      "color_index": 10
+    },
+    {
+      "name": "Trabalho",
+      "color_index": 3
     }
   ],
   "expected_achievements": [
@@ -54,11 +73,16 @@
       },
       {
         "action": "create_habit",
-        "description": "Criar primeiro hábito de exemplo"
+        "description": "Criar primeiro hábito de exemplo (frequência diária)"
       },
       {
-        "action": "create_habit",
-        "description": "Criar segundo hábito de exemplo"
+        "action": "create_habit_specific_days",
+        "description": "Criar segundo hábito com dias específicos (Seg, Qua, Sex)",
+        "days": [1, 3, 5]
+      },
+      {
+        "action": "manage_tags",
+        "description": "Demonstrar CRUD completo de tags (criar, editar cor, renomear, deletar)"
       },
       {
         "action": "create_todo",
@@ -104,6 +128,10 @@
       {
         "action": "view_profile",
         "description": "Visualizar informações do perfil"
+      },
+      {
+        "action": "edit_character",
+        "description": "Editar avatar/personagem do usuário"
       },
       {
         "action": "calendar_next",

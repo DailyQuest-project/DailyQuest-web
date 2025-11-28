@@ -357,7 +357,12 @@ function DashboardContent() {
       : task.completed
     
     if (isCompleted) {
-      // Desconcluir - permitir que o usuário desfaça a conclusão
+      // ToDos completados não podem ser desconcluídos
+      if (task.task_type === 'todo') {
+        return // ToDos são permanentes - não podem ser desconcluídos
+      }
+      
+      // Desconcluir hábito - permitir que o usuário desfaça a conclusão do dia
       await uncompleteTask(id)
       await fetchTasks()
       await fetchCompletionHistory() // Atualizar calendário

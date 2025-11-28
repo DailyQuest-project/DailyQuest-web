@@ -5,7 +5,6 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Trophy, Lock, Search, ChevronDown } from "lucide-react"
-import { ScrollArea } from "@/components/ui/scroll-area"
 import { Input } from "@/components/ui/input"
 
 interface AchievementData {
@@ -190,7 +189,7 @@ export function AchievementsModal({ open, onOpenChange }: AchievementsModalProps
                 </p>
               </div>
             ) : (
-              <ScrollArea className="flex-1 pr-4">
+              <div className="flex-1 overflow-y-auto pr-2" style={{ maxHeight: "calc(90vh - 280px)" }}>
                 {filteredAchievements.length === 0 ? (
                   <div className="text-center py-12">
                     <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-muted/50 flex items-center justify-center">
@@ -280,7 +279,7 @@ export function AchievementsModal({ open, onOpenChange }: AchievementsModalProps
                     })}
                   </div>
                 )}
-              </ScrollArea>
+              </div>
             )}
           </div>
         )}

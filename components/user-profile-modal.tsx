@@ -101,16 +101,18 @@ export function UserProfileModal({
   const fetchCompletionHistory = useCallback(async () => {
     setIsLoadingHistory(true)
     try {
+      console.log('🔄 [Modal] Buscando histórico...')
       const { dashboardService } = await import('@/lib/api-service-complete')
       const data = await dashboardService.getHistory()
-      console.log('📊 Dados do histórico recebidos:', data)
+      console.log('📊 [Modal] Dados do histórico recebidos:', data)
+      console.log('📊 [Modal] Tipo:', typeof data, 'É array:', Array.isArray(data))
       
       // O backend retorna uma lista direta, não um objeto com entries
       const historyArray = Array.isArray(data) ? data : (data.entries || [])
-      console.log('📊 History array:', historyArray)
+      console.log('📊 [Modal] History array length:', historyArray.length)
       setCompletionHistory(historyArray)
     } catch (error) {
-      console.error('Erro ao buscar histórico:', error)
+      console.error('❌ [Modal] Erro ao buscar histórico:', error)
       setCompletionHistory([])
     } finally {
       setIsLoadingHistory(false)
@@ -119,7 +121,9 @@ export function UserProfileModal({
 
   // Buscar dados quando o modal abre
   useEffect(() => {
+    console.log('🔍 [Modal] useEffect triggered, open:', open)
     if (open) {
+      console.log('📂 [Modal] Modal aberto, buscando dados...')
       fetchCompletionHistory()
       fetchUserAchievements()
     }

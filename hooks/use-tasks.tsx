@@ -32,7 +32,7 @@ export function useTasks(): UseTasksReturn {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const { toast } = useToast()
-  const { updateUser } = useAuth()
+  const { updateUser, refreshUser } = useAuth()
 
   const fetchTasks = useCallback(async () => {
     try {
@@ -325,8 +325,11 @@ export function useTasks(): UseTasksReturn {
         return task
       }))
       
-      // Atualizar XP do usuário (remover XP)
-      await fetchTasks() // Recarregar para pegar dados atualizados do backend
+      // CRÍTICO: Atualizar dados do usuário após desconcluir (XP, nível, etc.)
+      await refreshUser()
+      
+      // Recarregar tarefas para pegar dados atualizados do backend
+      await fetchTasks()
       
       toast({
         title: "Tarefa desconcluída",

@@ -73,7 +73,7 @@ export function HabitFilters({ onFilterChange, availableTags }: HabitFiltersProp
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-3 sm:space-y-4">
       {/* Search Bar */}
       <div className="relative">
         <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
@@ -81,7 +81,7 @@ export function HabitFilters({ onFilterChange, availableTags }: HabitFiltersProp
           placeholder="Buscar hábitos..."
           value={filters.search}
           onChange={(e) => updateFilters({ search: e.target.value })}
-          className="pl-10 glass bg-transparent"
+          className="pl-10 glass bg-transparent text-sm sm:text-base h-9 sm:h-10"
         />
       </div>
 
@@ -90,11 +90,12 @@ export function HabitFilters({ onFilterChange, availableTags }: HabitFiltersProp
         {/* Advanced Filters Popover */}
         <Popover>
           <PopoverTrigger asChild>
-            <Button variant="outline" size="sm" className="glass bg-transparent">
-              <SlidersHorizontal className="w-4 h-4 mr-2" />
-              Filtros Avançados
+            <Button variant="outline" size="sm" className="glass bg-transparent text-xs sm:text-sm h-8 sm:h-9 px-2 sm:px-3">
+              <SlidersHorizontal className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+              <span className="hidden xs:inline">Filtros</span>
+              <span className="xs:hidden">Filtros</span>
               {hasActiveFilters && (
-                <Badge variant="secondary" className="ml-2 h-5 w-5 p-0 text-xs">
+                <Badge variant="secondary" className="ml-1 sm:ml-2 h-4 w-4 sm:h-5 sm:w-5 p-0 text-[10px] sm:text-xs">
                   !
                 </Badge>
               )}
